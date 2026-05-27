@@ -991,7 +991,7 @@ tbody tr:active td { background: var(--surface-2); }
     <span class="bn-icon">📤</span>
     <span class="bn-label">Pagos</span>
   </a>
-  <button class="bn-item" onclick="toggleMoreMenu()">
+  <button class="bn-item" onclick="toggleMoreMenu(event)">
     <span class="bn-icon">☰</span>
     <span class="bn-label">Más</span>
   </button>
@@ -1114,9 +1114,15 @@ function toggleMoreMenu() {
 
 // Dropdown menus
 document.addEventListener('click', function(e) {
-  if (!e.target.closest('.dropdown')) {
+  if (!e.target.closest('.dropdown') && !e.target.closest('#more-menu') && !e.target.closest('#more-backdrop')) {
     document.querySelectorAll('.dropdown-menu.open').forEach(m => {
-      if (m.id !== 'more-menu') m.classList.remove('open');
+      if (m.id === 'more-menu') {
+        m.classList.remove('open');
+        const backdrop = document.getElementById('more-backdrop');
+        if (backdrop) backdrop.classList.remove('open');
+      } else {
+        m.classList.remove('open');
+      }
     });
   }
 });
@@ -1126,13 +1132,22 @@ function toggleDropdown(id) {
   m.classList.toggle('open');
 }
 
-// Search clear buttons
-document.querySelectorAll('.search-wrap').forEach(wrap => {
-  const input = wrap.querySelector('input');
-  const clear = wrap.querySelector('.search-clear');
-  if (input && clear) {
-    input.addEventListener('input', () => { clear.style.display = input.value ? 'block' : 'none'; });
-    clear.addEventListener('click', () => { input.value = ''; input.dispatchEvent(new Event('input')); input.focus(); clear.style.display = 'none'; });
+// More menu toggle (mobile)
+function toggleMoreMenu(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('more-menu');
+  const backdrop = document.getElementById('more-backdrop');
+  const isOpen = menu.classList.contains('open');
+  // Cerrar otros dropdowns
+  document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
+  if (isOpen) {
+    menu.classList.remove('open');
+    backdrop.classList.remove('open');
+  } else {
+    menu.classList.add('open');
+    backdrop.classList.add('open');
+  }
+}
   }
 });
 
