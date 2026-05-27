@@ -1104,79 +1104,87 @@ tbody tr:active td { background: var(--surface-2); }
 </div>
 
 <script>
-// More menu toggle (mobile)
-function toggleMoreMenu() {
-  const menu = document.getElementById('more-menu');
-  const backdrop = document.getElementById('more-backdrop');
-  menu.classList.toggle('open');
-  backdrop.classList.toggle('open');
-}
-
-// Dropdown menus
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('.dropdown') && !e.target.closest('#more-menu') && !e.target.closest('#more-backdrop')) {
-    document.querySelectorAll('.dropdown-menu.open').forEach(m => {
-      if (m.id === 'more-menu') {
-        m.classList.remove('open');
-        const backdrop = document.getElementById('more-backdrop');
-        if (backdrop) backdrop.classList.remove('open');
-      } else {
-        m.classList.remove('open');
-      }
-    });
+(function() {
+  // ═══ MORE MENU (mobile) ═══
+  function moreMenuOpen() {
+    document.getElementById('more-menu').classList.add('open');
+    document.getElementById('more-backdrop').classList.add('open');
   }
-});
-function toggleDropdown(id) {
-  const m = document.getElementById(id);
-  document.querySelectorAll('.dropdown-menu.open').forEach(x => { if(x !== m) x.classList.remove('open'); });
-  m.classList.toggle('open');
-}
-
-// More menu toggle (mobile)
-function toggleMoreMenu(e) {
-  if (e) e.stopPropagation();
-  const menu = document.getElementById('more-menu');
-  const backdrop = document.getElementById('more-backdrop');
-  const isOpen = menu.classList.contains('open');
-  // Cerrar otros dropdowns
-  document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
-  if (isOpen) {
-    menu.classList.remove('open');
-    backdrop.classList.remove('open');
-  } else {
-    menu.classList.add('open');
-    backdrop.classList.add('open');
+  function moreMenuClose() {
+    document.getElementById('more-menu').classList.remove('open');
+    document.getElementById('more-backdrop').classList.remove('open');
   }
-}
-  }
-});
-
-// Buscador genérico
-function initBuscador(inputId, targetSelector) {
-  function setup() {
-    const input = document.getElementById(inputId);
-    if (!input) return;
-    const container = input.closest('.search-bar') || input.closest('.search-wrap') || input.parentElement;
-    const clearBtn = container ? container.querySelector('.search-clear') : null;
-    const contador = document.getElementById(inputId + '-count');
-    function filtrar() {
-      const q = input.value.trim().toLowerCase();
-      if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
-      const items = document.querySelectorAll(targetSelector);
-      let visible = 0;
-      items.forEach(item => {
-        const match = !q || item.textContent.toLowerCase().includes(q);
-        item.style.display = match ? '' : 'none';
-        if (match) visible++;
-      });
-      if (contador) contador.textContent = q ? visible + ' resultado(s)' : '';
+  function moreMenuToggle(e) {
+    if (e) e.stopPropagation();
+    if (document.getElementById('more-menu').classList.contains('open')) {
+      moreMenuClose();
+    } else {
+      // Cerrar dropdowns abiertos
+      document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
+      moreMenuOpen();
     }
-    input.addEventListener('input', filtrar);
-    if (clearBtn) clearBtn.addEventListener('click', () => { input.value=''; filtrar(); input.focus(); });
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup);
-  else setup();
-}
+
+  // Exponer globalmente para el onclick inline
+  window.toggleMoreMenu = moreMenuToggle;
+
+  // Click en backdrop cierra menú
+  document.getElementById('more-backdrop').addEventListener('click', function() {
+    moreMenuClose();
+  });
+
+  // ═══ DROPDOWNS (desktop) ═══
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.dropdown')) {
+      document.querySelectorAll('.dropdown-menu.open').forEach(m => {
+        if (m.id !== 'more-menu') m.classList.remove('open');
+      });
+    }
+  });
+  window.toggleDropdown = function(id) {
+    const m = document.getElementById(id);
+    document.querySelectorAll('.dropdown-menu.open').forEach(x => { if(x !== m) x.classList.remove('open'); });
+    m.classList.toggle('open');
+  };
+
+  // ═══ SEARCH CLEAR ═══
+  document.querySelectorAll('.search-wrap').forEach(wrap => {
+    const input = wrap.querySelector('input');
+    const clear = wrap.querySelector('.search-clear');
+    if (input && clear) {
+      input.addEventListener('input', () => { clear.style.display = input.value ? 'block' : 'none'; });
+      clear.addEventListener('click', () => { input.value = ''; input.dispatchEvent(new Event('input')); input.focus(); clear.style.display = 'none'; });
+    }
+  });
+
+  // ═══ BUSCADOR GENÉRICO ═══
+  window.initBuscador = function(inputId, targetSelector) {
+    function setup() {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      const container = input.closest('.search-bar') || input.closest('.search-wrap') || input.parentElement;
+      const clearBtn = container ? container.querySelector('.search-clear') : null;
+      const contador = document.getElementById(inputId + '-count');
+      function filtrar() {
+        const q = input.value.trim().toLowerCase();
+        if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
+        const items = document.querySelectorAll(targetSelector);
+        let visible = 0;
+        items.forEach(item => {
+          const match = !q || item.textContent.toLowerCase().includes(q);
+          item.style.display = match ? '' : 'none';
+          if (match) visible++;
+        });
+        if (contador) contador.textContent = q ? visible + ' resultado(s)' : '';
+      }
+      input.addEventListener('input', filtrar);
+      if (clearBtn) clearBtn.addEventListener('click', () => { input.value=''; filtrar(); input.focus(); });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup);
+    else setup();
+  };
+})();
+</script>
 
 // Global search
 function initGlobalSearch() {
