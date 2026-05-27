@@ -1600,6 +1600,56 @@ def api_buscar_comprobante():
 
 # ════════════ MAIN ════════════
 
+# ════════════ BACKUP TENANT (admin restaura backup de cualquier empresa) ════════════
+
+@app.route('/admin/empresa/<int:eid>/restaurar-backup', methods=['POST'])
+@login_required
+@admin_required
+def admin_restaurar_backup_tenant(eid):
+    import shutil, tempfile
+    f = request.files.get('archivo')
+    if not f:
+        flash('No se seleccionó ningún archivo.', 'danger')
+        return redirect(url_for('admin_panel'))
+
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+    f.save(tmp.name)
+    try:
+        conn = sqlite3.connect(tmp.name)
+        conn.execute('SELECT COUNT(*) FROM proveedores')
+        conn.close()
+    except Exception:
+        os.unlink(tmp.name)
+        flash('El archivo no es una base de datos válida.', 'danger')
+        return redirect(url_for('admin_panel'))
+
+    db_path, slug = get_tenant_db_path(eid)
+    if db_path:
+        # Backup del backup actual antes de restaurar
+        if os.path.exists(db_path):
+            backup_prev = db_path + '.prev'
+            shutil.copy2(db_path, backup_prev)
+        shutil.copy2(tmp.name, db_path)
+        os.unlink(tmp.name)
+        flash(f'Backup restaurado en "{slug}". Si algo salió mal, el backup anterior se guardó como .prev', 'success')
+    else:
+        flash('Empresa no encontrada.', 'danger')
+    return redirect(url_for('admin_panel'))
+
+@app.route('/admin/empresa/<int:eid>/descargar-backup')
+@login_required
+@admin_required
+def admin_descargar_backup_tenant(eid):
+    db_path, slug = get_tenant_db_path(eid)
+    if not db_path or not os.path.exists(db_path):
+        abort(404)
+    out = io.BytesIO()
+    with open(db_path, 'rb') as f:
+        out.write(f.read())
+    out.seek(0)
+    return send_file(out, download_name=f'backup_{slug}_{date.today().strftime("%Y%m%d")}.db',
+                     mimetype='application/octet-stream')
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     debug = os.environ.get('FLASK_DEBUG', '0') == '1'
