@@ -1574,6 +1574,50 @@ def backup_restaurar():
     os.unlink(tmp.name)
     return redirect(url_for('index'))
 
+@app.route('/backup/restaurar_json', methods=['POST'])
+@login_required
+def backup_restaurar_json():
+    """Restaurar backup desde JSON exportado."""
+    import tempfile
+    f = request.files.get('archivo')
+    if not f:
+        return redirect(url_for('backup_page'))
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode='w')
+    try:
+        content = f.read().decode('utf-8')
+        tmp.write(content)
+        tmp.close()
+        with open(tmp.name) as jf:
+            backup = json.load(jf)
+    except Exception as e:
+        os.unlink(tmp.name)
+        return render_template('backup.html', error=f"Error leyendo JSON: {e}",
+                               n_provs=0, n_facturas=0, n_pagos=0, n_cp=0, db_size=0, today=date.today().isoformat())
+    os.unlink(tmp.name)
+
+    db = get_tenant_db(current_user.empresa_id)
+    data = backup.get('data', backup)
+    total = 0
+    for tabla in ['saldos_favor', 'pagos', 'facturas', 'cobros_pagos', 'proveedores']:
+        registros = data.get(tabla, [])
+        if not registros:
+            continue
+        cols = list(registros[0].keys())
+        placeholders = ','.join(['?'] * len(cols))
+        col_names = ','.join(cols)
+        for row in registros:
+            vals = [row.get(c) for c in cols]
+            try:
+                db.execute(f"INSERT OR REPLACE INTO {tabla} ({col_names}) VALUES ({placeholders})", vals)
+                total += 1
+            except Exception:
+                pass
+    db.commit()
+    db.close()
+
+    return render_template('backup.html', success=f"Restaurados {total} registros desde JSON.",
+                           n_provs=0, n_facturas=0, n_pagos=0, n_cp=0, db_size=0, today=date.today().isoformat())
+
 @app.route('/configuracion', methods=['GET','POST'])
 @login_required
 def configuracion():
