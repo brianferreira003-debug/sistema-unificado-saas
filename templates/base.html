@@ -1185,42 +1185,5 @@ tbody tr:active td { background: var(--surface-2); }
   };
 })();
 </script>
-
-// Global search
-function initGlobalSearch() {
-  const input = document.getElementById('global-search');
-  if (!input) return;
-  const dropdown = document.getElementById('global-search-results');
-  let timer;
-  input.addEventListener('input', function() {
-    clearTimeout(timer);
-    const q = this.value.trim();
-    if (!q || q.length < 2) { dropdown.style.display='none'; return; }
-    timer = setTimeout(() => doGlobalSearch(q), 220);
-  });
-  input.addEventListener('keydown', function(e) {
-    if (e.key==='Escape') { dropdown.style.display='none'; this.value=''; }
-  });
-  document.addEventListener('click', function(e) {
-    if (!input.contains(e.target) && !dropdown.contains(e.target)) dropdown.style.display='none';
-  });
-}
-async function doGlobalSearch(q) {
-  const dropdown = document.getElementById('global-search-results');
-  try {
-    const r = await fetch('/api/buscar?q=' + encodeURIComponent(q));
-    const data = await r.json();
-    if (!data.length) { dropdown.innerHTML='<div style="padding:12px 14px;font-size:12px;color:#94a3b8">Sin resultados</div>'; dropdown.style.display='block'; return; }
-    const icons = {factura:'🧾',proveedor:'🏢',cobro:'💚',pago:'🔴'};
-    dropdown.innerHTML = data.map(item => {
-      return '<a href="'+item.url+'" class="gs-item" onclick="document.getElementById(\'global-search-results\').style.display=\'none\';document.getElementById(\'global-search').value=\'\';">' +
-        '<span class="gs-icon">'+(icons[item.tipo]||'📄')+'</span>' +
-        '<span class="gs-body"><span class="gs-title">'+item.titulo+'</span><span class="gs-sub">'+item.subtitulo+'</span></span>' +
-        '<span class="gs-badge">'+item.tipo+'</span></a>';
-    }).join('');
-    dropdown.style.display='block';
-  } catch(e) { dropdown.style.display='none'; }
-}
-</script>
 </body>
 </html>
