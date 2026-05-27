@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Configuración{% endblock %}
+{% block content %}
+<div style="max-width:600px">
+<h1>⚙️ Configuración</h1>
+
+{% if saved %}
+<div class="alert-box" style="background:#dcfce7;border-color:#86efac;color:#166534;margin-bottom:16px">✅ Configuración guardada correctamente.</div>
+{% endif %}
+{% if error %}
+<div class="alert-box danger" style="margin-bottom:16px">{{ error }}</div>
+{% endif %}
+
+<div class="card">
+<form method="post">
+  <div class="form-group">
+    <label>Nombre de la empresa (para los mails)</label>
+    <input name="nombre_empresa" value="{{ cfg.nombre_empresa or '' }}" placeholder="Ej: Distribuidora XYZ S.A.">
+    <div style="font-size:11px;color:#888;margin-top:3px">Aparece al final de cada mail como firma.</div>
+  </div>
+
+  <div class="form-group">
+    <label>Carpeta base de comprobantes</label>
+    <input name="carpeta_comprobantes" value="{{ cfg.carpeta_comprobantes or '' }}"
+           placeholder="Ej: C:\Comprobantes">
+    <div style="font-size:11px;color:#888;margin-top:3px;line-height:1.6">
+      El sistema buscará automáticamente archivos con el patrón
+      <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px">PAGO_[PROVEEDOR]_[DD]_[MM]_[YYYY]</code>
+      dentro de las subcarpetas <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px">[AÑO]\[MES]\</code>
+    </div>
+  </div>
+
+  <div class="card" style="background:#f0f7ff;margin:16px 0;font-size:12px;line-height:1.8">
+    <strong>Ejemplo de estructura esperada:</strong><br>
+    <code>C:\Comprobantes\<br>
+    &nbsp;&nbsp;2026\<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;04\<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PAGO_SISPRO_22_04_2026.pdf<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PAGO_FULLSYSTEM_15_04_2026.pdf</code>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Guardar configuración</button>
+</form>
+</div>
+</div>
+{% endblock %}

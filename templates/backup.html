@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Backup{% endblock %}
+{% block content %}
+<div style="max-width:620px">
+<h1>💾 Backup del sistema</h1>
+
+{% if error %}
+<div class="alert-box danger" style="margin-bottom:16px">{{ error }}</div>
+{% endif %}
+
+<!-- Stats -->
+<div class="grid4" style="margin-bottom:20px">
+  <div class="stat"><div class="label">Proveedores</div><div class="value">{{ n_provs }}</div></div>
+  <div class="stat"><div class="label">Facturas</div><div class="value">{{ n_facturas }}</div></div>
+  <div class="stat"><div class="label">Pagos registrados</div><div class="value">{{ n_pagos }}</div></div>
+  <div class="stat"><div class="label">Tamaño base de datos</div><div class="value" style="font-size:16px">{{ db_size }} KB</div></div>
+</div>
+
+<!-- Download backup -->
+<div class="card" style="margin-bottom:16px">
+  <h2>⬇️ Descargar backup</h2>
+  <p style="font-size:13px;color:#555;margin:8px 0 14px;line-height:1.6">
+    Descarga una copia completa de la base de datos. Guardala en tu Google Drive o en otra carpeta.
+    El archivo se llama <code style="font-size:12px;background:#f0f0f0;padding:1px 5px;border-radius:3px">proveedores_backup_{{ today|replace('-','') }}.db</code>
+  </p>
+  <a href="/backup/descargar" class="btn btn-primary">⬇️ Descargar backup ahora</a>
+</div>
+
+<!-- Restore backup -->
+<div class="card" style="border-color:#f0b8b8">
+  <h2>⬆️ Restaurar backup</h2>
+  <div class="alert-box danger" style="margin:10px 0 14px">
+    <strong>Atención:</strong> Restaurar un backup reemplaza TODOS los datos actuales. Descargá primero un backup de hoy antes de restaurar.
+  </div>
+  <form method="post" action="/backup/restaurar" enctype="multipart/form-data">
+    <div class="form-group" style="margin-bottom:14px">
+      <label>Archivo de backup (.db)</label>
+      <input type="file" name="archivo" accept=".db" required style="padding:6px">
+    </div>
+    <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro? Esto reemplaza todos los datos actuales.')">
+      ⬆️ Restaurar este backup
+    </button>
+  </form>
+</div>
+
+<!-- Instructions -->
+<div class="card" style="margin-top:16px;background:#f8f9fa">
+  <h2 style="margin-bottom:8px">¿Cómo hacer backup antes de actualizar el sistema?</h2>
+  <ol style="font-size:13px;color:#444;line-height:2;padding-left:18px">
+    <li>Hacé clic en <strong>Descargar backup ahora</strong></li>
+    <li>Guardá el archivo <code>.db</code> en tu Google Drive</li>
+    <li>Reemplazá los archivos del sistema con la versión nueva</li>
+    <li>Iniciá el sistema nuevo con <code>Iniciar Sistema.bat</code></li>
+    <li>Si algo salió mal, volvé acá y usá <strong>Restaurar backup</strong></li>
+  </ol>
+</div>
+
+</div>
+{% endblock %}

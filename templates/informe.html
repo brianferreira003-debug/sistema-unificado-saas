@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}Informe de pagos{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <div>
+    <h1>Informe de pagos — {{ today }}</h1>
+    <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap">
+      <a href="/informe" class="btn btn-sm {% if not destino_filtro %}btn-primary{% else %}btn-outline{% endif %}">Todos</a>
+      <a href="/informe?destino=EVO" class="btn btn-sm {% if destino_filtro=='EVO' %}btn-primary{% else %}btn-outline{% endif %}">Solo EVO</a>
+      <a href="/informe?destino=FEDE" class="btn btn-sm {% if destino_filtro=='FEDE' %}btn-primary{% else %}btn-outline{% endif %}">Solo FEDE</a>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px">
+    <a href="/informe/exportar{% if destino_filtro %}?destino={{ destino_filtro }}{% endif %}" class="btn btn-success">⬇️ Exportar Excel</a>
+  </div>
+</div>
+
+{% if destino_filtro %}
+<div class="alert-box info">
+  Mostrando facturas de <strong>{{ destino_filtro }}</strong> únicamente.
+  <a href="/informe" style="color:#1e40af;font-weight:600;margin-left:8px">Ver todas →</a>
+</div>
+{% endif %}
+
+<div class="search-bar" style="margin-bottom:16px">
+  <span class="search-icon">🔍</span>
+  <input type="text" id="buscar-informe" placeholder="Buscar proveedor o número de factura...">
+  <button class="search-clear">✕</button>
+</div>
+<div style="font-size:12px;color:#64748b;margin-top:-12px;margin-bottom:12px" id="buscar-informe-count"></div>
+{% if not proveedores %}
+<div class="alert-box warning">No hay facturas pendientes o aprobadas.</div>
+{% else %}
+
+{% set total_usd = namespace(v=0) %}
+{% set total_uyu = namespace(v=0) %}
+{% set total_usd_neto = namespace(v=0) %}
+{% set total_uyu_neto = namespace(v=0) %}
+
+{% for pid, grupo in proveedores.items() %}
+{% set info = grupo.info %}
+{% set facturas = grupo.facturas %}
+{% set moneda = facturas[0].moneda if facturas else 'USD' %}
+{% if moneda == 'USD' %}
+  {% set total_usd.v = total_usd.v + grupo.total %}
+  {% set total_usd_neto.v = total_usd_neto.v + grupo.total_neto %}
+{% else %}
+  {% set total_uyu.v = total_uyu.v + grupo.total %}
+  {% set total_uyu_neto.v = total_uyu_neto.v + grupo.total_neto %}
+{% endif %}
+
+<div class="card informe-card" style="margin-bottom:20px;padding:0;overflow:hidden">
+  <!-- Header proveedor -->
+  <div style="background:#1a3a5c;color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <div>
+      <span style="font-weight:700;font-size:15px">{{ info.proveedor_nombre }}</span>
+      {% if info.razon_social %}<span style="font-size:12px;opacity:.7;margin-left:10px">{{ info.razon_social }}</span>{% endif %}
+    </div>
+    <div style="display:flex;gap:14px;align-items:center;font-size:13px;flex-wrap:wrap">
+      <span style="background:{% if moneda=='USD' %}#15803d{% else %}#6d28d9{% endif %};padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700">{{ moneda }}</span>
+      <span style="opacity:.8;font-size:12px">{{ today }}</span>
+      {% if grupo.total_descuento > 0 %}
+        <span style="background:rgba(255,255,255,.1);padding:4px 12px;border-radius:8px">
+          Subtotal: <strong>{{ "%.2f"|format(grupo.total) }}</strong>
+          &nbsp;|&nbsp; Desc.: <strong style="color:#fcd34d">-{{ "%.2f"|format(grupo.total_descuento) }}</strong>
+          &nbsp;|&nbsp; <strong style="color:#86efac">A pagar: {{ "%.2f"|format(grupo.total_neto) }}</strong>
+        </span>
+      {% else %}
+        <span style="background:rgba(255,255,255,.15);padding:4px 12px;border-radius:8px;font-weight:700">Total: {{ "%.2f"|format(grupo.total) }}</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr auto;gap:0">
+    <!-- Tabla facturas -->
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th style="background:#fbbf24;color:#1c1917">FECHA</th>
+          <th style="background:#fbbf24;color:#1c1917">N° FACTURA</th>
+          <th style="background:#fbbf24;color:#1c1917">IMPORTE</th>
+          <th style="background:#fbbf24;color:#1c1917">DESTINO</th>
+          <th style="background:#fbbf24;color:#1c1917">DESCUENTO</th>
+          <th style="background:#fbbf24;color:#1c1917">NETO</th>
+          <th style="background:#fbbf24;color:#1c1917">VTO.</th>
+          <th style="background:#fbbf24;color:#1c1917">ESTADO</th>
+        </tr></thead>
+        <tbody>
+        {% for f in facturas %}
+        {% set dias = f.dias|int if f.dias is not none else 0 %}
+        {% set desc = (f.descuento or 0)|float %}
+        {% set desc_mto = f.importe * desc / 100 if desc > 0 else 0 %}
+        {% set neto = f.importe - desc_mto %}
+        <tr>
+          <td>{{ f.fecha }}</td>
+          <td style="font-weight:500">{{ f.numero }}
+            {% if f.nota %}<br><span style="color:#94a3b8;font-size:11px;font-style:italic">{{ f.nota }}</span>{% endif %}
+          </td>
+          <td><strong>{{ "%.2f"|format(f.importe) }}</strong></td>
+          <td>
+            {% set dst = f.destino or f.cheque_id or '' %}
+            {% if dst == 'EVO' %}<span class="tag-evo">EVO</span>
+            {% elif dst == 'FEDE' %}<span class="tag-fede">FEDE</span>
+            {% elif dst %}<span class="badge badge-gray">{{ dst }}</span>
+            {% else %}<span style="color:#94a3b8;font-size:12px">—</span>{% endif %}
+          </td>
+          <td>
+            {% if desc > 0 %}
+              <span style="color:#dc2626;font-weight:600">{{ desc|int }}% (-{{ "%.2f"|format(desc_mto) }})</span>
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            {% if desc > 0 %}
+              <strong style="color:#16a34a">{{ "%.2f"|format(neto) }}</strong>
+            {% else %}{{ "%.2f"|format(f.importe) }}{% endif %}
+          </td>
+          <td>
+            {{ f.fecha_vencimiento }}
+            {% if dias < 0 %}<span class="badge badge-red">{{ dias|abs }}d venc.</span>
+            {% elif dias == 0 %}<span class="badge badge-red">HOY</span>
+            {% elif dias <= 7 %}<span class="badge badge-yellow">{{ dias }}d</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if f.estado=='pendiente' %}<span class="badge badge-gray">Pendiente</span>
+            {% elif f.estado=='aprobada' %}<span class="badge badge-blue">Aprobada</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+        <!-- Fila subtotal -->
+        <tr style="background:#f1f5f9">
+          <td colspan="2"><strong>SUBTOTAL</strong></td>
+          <td><strong>{{ "%.2f"|format(grupo.total) }}</strong></td>
+          <td colspan="5"></td>
+        </tr>
+        {% if grupo.total_descuento > 0 %}
+        <tr style="background:#fff7ed">
+          <td colspan="2" style="color:#9a3412;font-weight:700">DESCUENTO</td>
+          <td style="color:#dc2626;font-weight:700">-{{ "%.2f"|format(grupo.total_descuento) }}</td>
+          <td colspan="5"></td>
+        </tr>
+        <tr style="background:#f0fdf4">
+          <td colspan="2" style="color:#166534;font-weight:800">TOTAL A PAGAR</td>
+          <td style="color:#16a34a;font-weight:800;font-size:15px">{{ "%.2f"|format(grupo.total_neto) }}</td>
+          <td colspan="5"></td>
+        </tr>
+        {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Datos bancarios -->
+    <div style="border-left:1px solid #e2e8f0;padding:14px 18px;min-width:230px;font-size:12px;background:#fafbfc">
+      <div style="font-weight:700;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Cuentas bancarias</div>
+      {% if info.razon_social %}<div style="margin-bottom:8px;font-weight:600;color:#334155">{{ info.razon_social }}</div>{% endif %}
+      {% for i in range(1,4) %}
+        {% set bn = info['banco'~i~'_nombre'] %}
+        {% set bc = info['banco'~i~'_cuenta'] %}
+        {% if bn %}
+        <div style="margin-bottom:10px;padding:8px 10px;background:#fff;border-radius:6px;border:1px solid #e2e8f0">
+          <div style="font-weight:700;color:#1a3a5c;font-size:12px">{{ bn }}</div>
+          <div style="color:#475569;margin-top:2px">{{ bc or '—' }}</div>
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- Resumen total -->
+<div class="card" style="background:#eff6ff;border-color:#bfdbfe;margin-top:8px">
+  <div style="font-weight:700;font-size:14px;margin-bottom:16px;color:#1e3a8a">Resumen total a pagar</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px">
+    <div style="background:#fff;border-radius:8px;padding:16px;border:1px solid #dbeafe">
+      <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Total bruto USD</div>
+      <div style="font-size:22px;font-weight:800;color:#1a3a5c">$ {{ "%.2f"|format(total_usd.v) }}</div>
+    </div>
+    {% if total_usd_neto.v != total_usd.v %}
+    <div style="background:#fff;border-radius:8px;padding:16px;border:1px solid #bbf7d0">
+      <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Total neto USD (c/ descuentos)</div>
+      <div style="font-size:22px;font-weight:800;color:#16a34a">$ {{ "%.2f"|format(total_usd_neto.v) }}</div>
+    </div>
+    {% endif %}
+    <div style="background:#fff;border-radius:8px;padding:16px;border:1px solid #e9d5ff">
+      <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Total bruto UYU</div>
+      <div style="font-size:22px;font-weight:800;color:#7c3aed">$ {{ "%.0f"|format(total_uyu.v) }}</div>
+    </div>
+    {% if total_uyu_neto.v != total_uyu.v %}
+    <div style="background:#fff;border-radius:8px;padding:16px;border:1px solid #bbf7d0">
+      <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Total neto UYU (c/ descuentos)</div>
+      <div style="font-size:22px;font-weight:800;color:#16a34a">$ {{ "%.0f"|format(total_uyu_neto.v) }}</div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endif %}
+
+<script>initBuscador('buscar-informe','.informe-card');</script>
+{% endblock %}

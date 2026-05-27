@@ -1,0 +1,530 @@
+{% extends "base.html" %}
+{% block title %}Registrar Cobro / Pago{% endblock %}
+{% block page_title %}Registrar Cobro / Pago{% endblock %}
+{% block content %}
+
+<div class="grid2" style="align-items:start">
+
+  <!-- FORMULARIO -->
+  <div class="card">
+
+    <!-- Toggle Cobro / Pago -->
+    <div style="display:flex;gap:0;margin-bottom:20px;border-radius:8px;overflow:hidden;border:1.5px solid var(--border)">
+      <button id="btn-cobro" onclick="setTipo('Cobro')"
+        style="flex:1;padding:10px;font-size:14px;font-weight:700;border:none;cursor:pointer;background:#dcfce7;color:#166534;transition:all .15s">
+        💚 Cobro
+      </button>
+      <button id="btn-pago" onclick="setTipo('Pago')"
+        style="flex:1;padding:10px;font-size:14px;font-weight:700;border:none;cursor:pointer;background:#f1f5f9;color:#475569;transition:all .15s">
+        🔴 Pago
+      </button>
+    </div>
+
+    <!-- PASO 1: Fecha + Estado -->
+    <div class="form-row cols2">
+      <div class="form-group">
+        <label>Fecha</label>
+        <input type="date" id="f-fecha" value="{{ today }}">
+      </div>
+      <div class="form-group">
+        <label>Estado inicial</label>
+        <select id="f-estado">
+          <option value="Procesado">Procesado</option>
+          <option value="Pendiente">Pendiente</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- PASO 2: VINCULAR FACTURAS (solo Pago) -->
+    <div id="panel-sync" style="display:none;margin-bottom:16px;border:2px solid #f59e0b;border-radius:10px;padding:16px;background:#fffbeb">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <input type="checkbox" id="chk-sync" onchange="toggleSync()" style="width:16px;height:16px;cursor:pointer">
+        <label for="chk-sync" style="font-size:13px;font-weight:700;color:#92400e;cursor:pointer;margin:0">
+          📋 Vincular con facturas de proveedor
+        </label>
+      </div>
+      <div id="sync-body" style="display:none">
+        <div style="font-size:12px;color:#78350f;margin-bottom:12px">
+          Elegí el proveedor y las facturas — el nombre y monto se completan solos.
+        </div>
+        <div class="form-row cols2" style="margin-bottom:10px">
+          <div class="form-group" style="margin:0">
+            <label>Proveedor</label>
+            <select id="sync-proveedor" onchange="cargarFacturasPendientes()" style="width:100%">
+              <option value="">— Seleccioná proveedor —</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Marcar facturas como</label>
+            <select id="sync-estado-pago" style="width:100%">
+              <option value="pagada">Pagada (con comprobante)</option>
+              <option value="pagada_sin_comprobante">Pagada (sin comprobante)</option>
+            </select>
+          </div>
+        </div>
+        <div id="sync-descuento-info" style="display:none;font-size:12px;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:7px 10px;margin-bottom:10px"></div>
+        <div id="sync-facturas-wrap" style="display:none">
+          <div style="font-size:12px;font-weight:600;color:#78350f;margin-bottom:7px" id="sync-facturas-titulo"></div>
+          <div id="sync-facturas-lista" style="max-height:240px;overflow-y:auto;border:1px solid #fcd34d;border-radius:7px;background:#fff"></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
+            <button type="button" onclick="seleccionarTodas()" class="btn btn-outline btn-sm">Todas</button>
+            <button type="button" onclick="seleccionarNinguna()" class="btn btn-outline btn-sm">Ninguna</button>
+            <span id="sync-seleccion-info" style="font-size:12px;color:#78350f;font-weight:600"></span>
+          </div>
+        </div>
+        <div id="sync-loading" style="display:none;font-size:12px;color:#94a3b8;padding:8px 0">Cargando facturas...</div>
+        <div id="sync-empty" style="display:none;font-size:12px;color:#94a3b8;padding:8px 0">✓ Este proveedor no tiene facturas pendientes.</div>
+      </div>
+    </div>
+
+    <!-- PASO 3: Nombre + Monto (se autocompletan desde sync) -->
+    <div class="form-group">
+      <label>Cliente / Proveedor</label>
+      <input type="text" id="f-cliente" placeholder="Nombre del cliente o proveedor">
+    </div>
+    <div class="form-row cols2">
+      <div class="form-group">
+        <label>Monto</label>
+        <input type="number" step="0.01" id="f-monto" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label>Moneda</label>
+        <select id="f-moneda">
+          <option value="USD">USD</option>
+          <option value="UYU">UYU</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- PASO 4: Medio / Banco / Nota -->
+    <div class="form-row cols2">
+      <div class="form-group">
+        <label>Medio</label>
+        <select id="f-medio">
+          <option>Transferencia</option>
+          <option>Efectivo</option>
+          <option>Cheque</option>
+          <option>Débito</option>
+          <option>Crédito</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Banco</label>
+        <input type="text" id="f-banco" value="Santander" placeholder="Banco">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Nota</label>
+      <input type="text" id="f-nota" placeholder="N° de factura, referencia, etc.">
+    </div>
+
+    <!-- PASO 5: Comprobante -->
+    <div class="form-group">
+      <label>Comprobante</label>
+      <div id="drop-zone"
+           ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)"
+           onclick="document.getElementById('file-input').click()"
+           style="border:2px dashed #cbd5e1;border-radius:10px;padding:18px 14px;text-align:center;cursor:pointer;transition:all .2s;background:#f8fafc;display:flex;flex-direction:column;align-items:center;gap:6px">
+        <div style="font-size:26px">📎</div>
+        <div style="font-size:13px;font-weight:600;color:#475569">Arrastrá el comprobante acá o hacé clic</div>
+        <div style="font-size:11px;color:#94a3b8">PDF, JPG, PNG — máx. 20 MB</div>
+        <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png,.webp" style="display:none" onchange="archivoSeleccionado(this.files[0])">
+      </div>
+      <div id="upload-status" style="display:none;margin-top:8px;padding:10px 14px;border-radius:8px;font-size:12px;font-weight:600;align-items:center;gap:8px"></div>
+      <div id="archivo-preview" style="display:none;margin-top:8px;padding:9px 12px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;align-items:center;gap:10px;font-size:12px">
+        <span id="archivo-icono" style="font-size:18px"></span>
+        <div style="flex:1;min-width:0">
+          <div id="archivo-nombre" style="font-weight:600;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+          <div id="archivo-size" style="color:#94a3b8;font-size:11px"></div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button id="btn-subir" onclick="subirADrive()" style="padding:5px 12px;font-size:12px;font-weight:700;border:none;border-radius:6px;background:#2563eb;color:#fff;cursor:pointer">☁️ Subir a Drive</button>
+          <button onclick="limpiarArchivo()" style="padding:5px 8px;font-size:12px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;cursor:pointer;color:#64748b">✕</button>
+        </div>
+      </div>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:6px">
+        <input type="url" id="f-link" placeholder="https://drive.google.com/..." style="flex:1" oninput="onLinkInput()">
+        <button id="btn-abrir-link" onclick="abrirLink()" title="Abrir en Drive" style="display:none;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;cursor:pointer;font-size:14px">🔗</button>
+      </div>
+      <div id="drive-tip" style="font-size:11px;color:#64748b;margin-top:3px"></div>
+      <div id="drive-no-config" style="display:none;margin-top:6px;padding:8px 12px;border-radius:7px;background:#fef3c7;border:1px solid #fcd34d;font-size:12px;color:#92400e">
+        ⚠️ Drive no está configurado. Podés pegar el link manualmente o <a href="/configuracion" style="color:#92400e;font-weight:700">ir a Configuración</a>.
+      </div>
+    </div>
+
+    <!-- PASO 6: Registrar -->
+    <button onclick="registrar()" id="btn-registrar" class="btn btn-success" style="width:100%;padding:11px;font-size:14px">Registrar</button>
+    <div id="toast" style="display:none;margin-top:12px;padding:10px 14px;border-radius:7px;font-size:13px;font-weight:600;text-align:center"></div>
+
+    <!-- Nombre sugerido Drive -->
+    <div style="margin-top:14px;padding:12px 14px;border-radius:8px;border:1px dashed #cbd5e1;background:#f8fafc;font-size:12px">
+      <div style="font-weight:700;color:#1a3a5c;margin-bottom:6px">Nombre sugerido para el archivo en Drive:</div>
+      <div style="color:#64748b;margin-bottom:3px">Carpeta: <code id="drive-path" style="font-family:monospace;color:#1a3a5c"></code></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
+        <span style="color:#475569">Nombre:</span>
+        <code id="drive-nombre" style="font-family:monospace;font-size:12px;color:#1a3a5c;background:#e2e8f0;padding:2px 7px;border-radius:4px"></code>
+        <button id="btn-copiar-nombre" onclick="copiarNombreSugerido()" style="padding:3px 10px;font-size:11px;border:1px solid #cbd5e1;border-radius:5px;background:#fff;cursor:pointer;font-weight:600;color:#475569">📋 Copiar nombre</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÚLTIMOS REGISTROS -->
+  <div>
+    <div style="font-size:13px;font-weight:700;color:#1a3a5c;margin-bottom:12px">Últimos 10 registros</div>
+    <div id="ultimos-lista"><div style="color:#94a3b8;font-size:13px">Cargando...</div></div>
+    <div style="margin-top:14px">
+      <a href="/cobros-pagos/historial" class="btn btn-outline btn-sm">Ver historial completo →</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let tipoActual = 'Cobro';
+let facturasDisponibles = [];
+let descuentoProveedor = 0;
+let archivoActual = null;
+let driveConfigurado = false;
+
+async function verificarDrive() {
+  try {
+    const r = await fetch('/api/drive_status');
+    const d = await r.json();
+    driveConfigurado = d.configurado;
+    if (!driveConfigurado) document.getElementById('drive-no-config').style.display = 'block';
+  } catch(e) { driveConfigurado = false; }
+}
+
+function setTipo(tipo) {
+  tipoActual = tipo;
+  document.getElementById('btn-cobro').style.background = tipo==='Cobro' ? '#dcfce7' : '#f1f5f9';
+  document.getElementById('btn-cobro').style.color      = tipo==='Cobro' ? '#166534' : '#475569';
+  document.getElementById('btn-pago').style.background  = tipo==='Pago'  ? '#fee2e2' : '#f1f5f9';
+  document.getElementById('btn-pago').style.color       = tipo==='Pago'  ? '#991b1b' : '#475569';
+  document.getElementById('panel-sync').style.display   = tipo==='Pago'  ? 'block'   : 'none';
+  actualizarDriveTip();
+}
+
+function toggleSync() {
+  const checked = document.getElementById('chk-sync').checked;
+  document.getElementById('sync-body').style.display = checked ? 'block' : 'none';
+}
+
+async function cargarProveedores() {
+  try {
+    const r = await fetch('/api/proveedores');
+    const data = await r.json();
+    const sel = document.getElementById('sync-proveedor');
+    sel.innerHTML = '<option value="">— Seleccioná proveedor —</option>';
+    data.forEach(p => {
+      const o = document.createElement('option');
+      o.value = p.id; o.textContent = p.nombre;
+      o.dataset.descuento = p.descuento_pct || 0;
+      sel.appendChild(o);
+    });
+  } catch(e) {}
+}
+
+async function cargarFacturasPendientes() {
+  const sel = document.getElementById('sync-proveedor');
+  const pid = sel.value;
+  const opt = sel.options[sel.selectedIndex];
+  descuentoProveedor = parseFloat(opt?.dataset?.descuento || 0);
+
+  document.getElementById('sync-facturas-wrap').style.display = 'none';
+  document.getElementById('sync-empty').style.display = 'none';
+  document.getElementById('sync-descuento-info').style.display = 'none';
+  facturasDisponibles = [];
+
+  if (!pid) return;
+
+  // Autocompletar nombre
+  document.getElementById('f-cliente').value = opt.textContent;
+  actualizarDriveTip();
+
+  if (descuentoProveedor > 0) {
+    const di = document.getElementById('sync-descuento-info');
+    di.textContent = 'Este proveedor tiene un descuento del ' + descuentoProveedor + '% aplicado al calcular totales.';
+    di.style.display = 'block';
+  }
+
+  document.getElementById('sync-loading').style.display = 'block';
+  try {
+    const r = await fetch('/api/facturas_pendientes/' + pid);
+    const resp = await r.json();
+    document.getElementById('sync-loading').style.display = 'none';
+
+    const data = Array.isArray(resp) ? resp : (resp.facturas || []);
+    if (resp.descuento_pct) descuentoProveedor = resp.descuento_pct;
+
+    if (!data.length) { document.getElementById('sync-empty').style.display = 'block'; return; }
+
+    facturasDisponibles = data;
+    renderFacturas(data);
+    document.getElementById('sync-facturas-wrap').style.display = 'block';
+    document.getElementById('sync-facturas-titulo').textContent =
+      data.length + ' factura' + (data.length !== 1 ? 's' : '') + ' pendiente' + (data.length !== 1 ? 's' : '');
+
+    // Auto-seleccionar si hay una sola
+    if (data.length === 1) {
+      document.querySelector('#sync-facturas-lista input[type=checkbox]').checked = true;
+      actualizarSeleccionInfo();
+    }
+  } catch(e) {
+    document.getElementById('sync-loading').style.display = 'none';
+  }
+}
+
+function renderFacturas(facturas) {
+  const lista = document.getElementById('sync-facturas-lista');
+  lista.innerHTML = facturas.map(f => {
+    const imp = parseFloat(f.importe);
+    const descuento = descuentoProveedor > 0 ? imp * descuentoProveedor / 100 : 0;
+    const final = imp - descuento;
+    const descTxt = descuento > 0 ? '<span style="color:#16a34a;font-size:10px"> (-' + f.moneda + ' ' + descuento.toFixed(2) + ')</span>' : '';
+    return '<label style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:1px solid #fef3c7;font-size:12px">' +
+      '<input type="checkbox" value="' + f.id + '" onchange="actualizarSeleccionInfo()" style="width:14px;height:14px;flex-shrink:0">' +
+      '<div style="flex:1"><span style="font-weight:600">#' + f.numero + '</span><span style="color:#94a3b8"> · vence ' + f.fecha_vencimiento + '</span></div>' +
+      '<div style="font-weight:700;color:#1e293b;font-family:var(--mono)">' + f.moneda + ' ' + final.toFixed(2) + descTxt + '</div>' +
+      '</label>';
+  }).join('');
+}
+
+function actualizarSeleccionInfo() {
+  const checks = [...document.querySelectorAll('#sync-facturas-lista input[type=checkbox]:checked')];
+  const totales = {};
+  checks.forEach(c => {
+    const f = facturasDisponibles.find(x => x.id == c.value);
+    if (!f) return;
+    const imp = parseFloat(f.importe);
+    const final = imp - (descuentoProveedor > 0 ? imp * descuentoProveedor / 100 : 0);
+    totales[f.moneda] = (totales[f.moneda] || 0) + final;
+  });
+  const txt = Object.entries(totales).map(([m,v]) => m + ' ' + v.toFixed(2)).join(' + ');
+  document.getElementById('sync-seleccion-info').textContent =
+    checks.length ? checks.length + ' seleccionada' + (checks.length!==1?'s':'') + ' · Total: ' + txt : '';
+  const monedas = Object.keys(totales);
+  if (monedas.length === 1) {
+    document.getElementById('f-monto').value = totales[monedas[0]].toFixed(2);
+    document.getElementById('f-moneda').value = monedas[0];
+  }
+}
+
+function seleccionarTodas() {
+  document.querySelectorAll('#sync-facturas-lista input[type=checkbox]').forEach(c => c.checked = true);
+  actualizarSeleccionInfo();
+}
+function seleccionarNinguna() {
+  document.querySelectorAll('#sync-facturas-lista input[type=checkbox]').forEach(c => c.checked = false);
+  actualizarSeleccionInfo();
+}
+
+function dragOver(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').style.borderColor = '#2563eb';
+  document.getElementById('drop-zone').style.background  = '#eff6ff';
+}
+function dragLeave(e) {
+  document.getElementById('drop-zone').style.borderColor = '#cbd5e1';
+  document.getElementById('drop-zone').style.background  = '#f8fafc';
+}
+function dropFile(e) {
+  e.preventDefault(); dragLeave(e);
+  if (e.dataTransfer.files[0]) archivoSeleccionado(e.dataTransfer.files[0]);
+}
+
+function archivoSeleccionado(file) {
+  if (!file) return;
+  if (file.size > 20 * 1024 * 1024) { showToast('El archivo supera 20 MB', true); return; }
+  archivoActual = file;
+  const iconos = { 'application/pdf': '📄', 'image/jpeg': '🖼️', 'image/png': '🖼️', 'image/webp': '🖼️' };
+  document.getElementById('archivo-icono').textContent  = iconos[file.type] || '📎';
+  document.getElementById('archivo-nombre').textContent = file.name;
+  document.getElementById('archivo-size').textContent   = (file.size / 1024).toFixed(0) + ' KB';
+  document.getElementById('archivo-preview').style.display = 'flex';
+  setUploadStatus('');
+  if (driveConfigurado) subirADrive();
+}
+
+function limpiarArchivo() {
+  archivoActual = null;
+  document.getElementById('archivo-preview').style.display = 'none';
+  document.getElementById('upload-status').style.display   = 'none';
+  document.getElementById('file-input').value = '';
+}
+
+async function subirADrive() {
+  if (!archivoActual) return;
+  const nombreSugerido = document.getElementById('drive-nombre').textContent;
+  const ext = archivoActual.name.split('.').pop();
+  const nombreFinal = nombreSugerido ? (nombreSugerido.includes('.') ? nombreSugerido : nombreSugerido + '.' + ext) : archivoActual.name;
+
+  document.getElementById('btn-subir').disabled = true;
+  document.getElementById('btn-subir').textContent = '⏳ Subiendo...';
+  setUploadStatus('⏳ Subiendo a Drive...', 'info');
+
+  const formData = new FormData();
+  formData.append('archivo', archivoActual);
+  formData.append('nombre', nombreFinal);
+
+  try {
+    const r = await fetch('/api/subir_comprobante', { method: 'POST', body: formData });
+    const d = await r.json();
+    if (!r.ok || d.error) {
+      setUploadStatus('❌ ' + (d.error || 'Error al subir'), 'error');
+      document.getElementById('btn-subir').disabled = false;
+      document.getElementById('btn-subir').textContent = '☁️ Reintentar';
+      return;
+    }
+    document.getElementById('f-link').value = d.link;
+    document.getElementById('btn-abrir-link').style.display = 'inline-block';
+    setUploadStatus('✅ Subido como "' + d.nombre + '"', 'ok');
+    document.getElementById('archivo-preview').style.display = 'none';
+    document.getElementById('drive-tip').textContent = '✓ Link de Google Drive listo';
+  } catch(e) {
+    setUploadStatus('❌ Error de conexión', 'error');
+    document.getElementById('btn-subir').disabled = false;
+    document.getElementById('btn-subir').textContent = '☁️ Reintentar';
+  }
+}
+
+function setUploadStatus(msg, tipo) {
+  const el = document.getElementById('upload-status');
+  if (!msg) { el.style.display = 'none'; return; }
+  const c = {info:{bg:'#eff6ff',color:'#1d4ed8',border:'#bfdbfe'},ok:{bg:'#dcfce7',color:'#166534',border:'#86efac'},error:{bg:'#fee2e2',color:'#991b1b',border:'#fecaca'}}[tipo] || {bg:'#eff6ff',color:'#1d4ed8',border:'#bfdbfe'};
+  el.style.display='flex'; el.style.background=c.bg; el.style.color=c.color; el.style.border='1px solid '+c.border;
+  el.textContent=msg;
+}
+
+function onLinkInput() {
+  const val = document.getElementById('f-link').value;
+  document.getElementById('drive-tip').textContent = val.includes('drive.google.com') ? '✓ Link de Google Drive detectado' : '';
+  document.getElementById('btn-abrir-link').style.display = val.includes('drive.google.com') ? 'inline-block' : 'none';
+}
+function abrirLink() { const l = document.getElementById('f-link').value; if(l) window.open(l,'_blank'); }
+
+async function registrar() {
+  const cliente = document.getElementById('f-cliente').value.trim();
+  const monto   = parseFloat(document.getElementById('f-monto').value);
+  if (!cliente) { showToast('Ingresá el nombre del cliente o proveedor', true); return; }
+  if (!monto || monto <= 0) { showToast('Ingresá un monto válido', true); return; }
+  if (archivoActual && !document.getElementById('f-link').value) { showToast('Esperá que termine la subida del comprobante...', true); return; }
+
+  const comprobante = document.getElementById('f-link').value.trim();
+  const payload = {
+    id: Date.now(), fecha: document.getElementById('f-fecha').value, tipo: tipoActual,
+    cliente, moneda: document.getElementById('f-moneda').value, monto,
+    medio: document.getElementById('f-medio').value, banco: document.getElementById('f-banco').value.trim(),
+    nota: document.getElementById('f-nota').value.trim(), comprobante,
+    estado: document.getElementById('f-estado').value,
+  };
+
+  try {
+    const r = await fetch('/api/cobros_pagos', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+    if (!r.ok) throw new Error();
+  } catch(e) { showToast('Error al guardar', true); return; }
+
+  const syncActivo = tipoActual === 'Pago' && document.getElementById('chk-sync').checked;
+  if (syncActivo) {
+    const pid = document.getElementById('sync-proveedor').value;
+    const estadoPago = document.getElementById('sync-estado-pago').value;
+    const facturaIds = [...document.querySelectorAll('#sync-facturas-lista input[type=checkbox]:checked')].map(c => parseInt(c.value));
+    if (pid && facturaIds.length > 0) {
+      try {
+        const r2 = await fetch('/api/marcar_pagadas', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ proveedor_id:parseInt(pid), estado:estadoPago, comprobante,
+            nota:document.getElementById('f-nota').value.trim(), fecha_pago:document.getElementById('f-fecha').value,
+            factura_ids:facturaIds, descuento_pct:descuentoProveedor })
+        });
+        const result = await r2.json();
+        showToast('✓ Pago registrado — ' + result.actualizadas + ' factura' + (result.actualizadas!==1?'s':'') + ' marcada' + (result.actualizadas!==1?'s':'') + ' como pagada' + (result.actualizadas!==1?'s':''));
+      } catch(e) { showToast('✓ Pago guardado, pero error al sincronizar facturas', true); }
+    } else { showToast('✓ Pago registrado'); }
+  } else {
+    showToast(tipoActual === 'Cobro' ? '✓ Cobro registrado' : '✓ Pago registrado');
+  }
+
+  // Limpiar
+  document.getElementById('f-cliente').value = '';
+  document.getElementById('f-monto').value   = '';
+  document.getElementById('f-nota').value    = '';
+  document.getElementById('f-link').value    = '';
+  document.getElementById('btn-abrir-link').style.display = 'none';
+  document.getElementById('drive-tip').textContent = '';
+  setUploadStatus(''); limpiarArchivo();
+
+  if (syncActivo) {
+    document.getElementById('chk-sync').checked = false;
+    document.getElementById('sync-body').style.display = 'none';
+    document.getElementById('sync-proveedor').value = '';
+    document.getElementById('sync-facturas-wrap').style.display = 'none';
+    document.getElementById('sync-empty').style.display = 'none';
+    document.getElementById('sync-seleccion-info').textContent = '';
+    facturasDisponibles = []; descuentoProveedor = 0;
+  }
+  cargarUltimos();
+}
+
+function showToast(msg, error=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  t.style.background = error ? '#fee2e2' : '#dcfce7';
+  t.style.color = error ? '#991b1b' : '#166534';
+  t.style.border = '1px solid ' + (error ? '#fecaca' : '#86efac');
+  setTimeout(() => t.style.display = 'none', 4000);
+}
+
+async function cargarUltimos() {
+  try {
+    const r = await fetch('/api/cobros_pagos');
+    const data = await r.json();
+    const lista = document.getElementById('ultimos-lista');
+    const ultimos = data.slice(0, 10);
+    if (!ultimos.length) { lista.innerHTML = '<div style="color:#94a3b8;font-size:13px">Sin registros aún</div>'; return; }
+    lista.innerHTML = ultimos.map(r =>
+      '<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:#fff;margin-bottom:7px">' +
+      '<span class="badge ' + (r.tipo==='Cobro'?'badge-green':'badge-orange') + '" style="flex-shrink:0">' + r.tipo + '</span>' +
+      '<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + r.cliente + '</div>' +
+      '<div style="font-size:11px;color:#94a3b8">' + r.fecha + ' · ' + (r.banco||r.medio) + '</div></div>' +
+      '<div style="text-align:right;flex-shrink:0"><div style="font-family:var(--mono);font-size:13px;font-weight:700;color:' + (r.tipo==='Cobro'?'#16a34a':'#dc2626') + '">' + r.moneda + ' ' + parseFloat(r.monto).toFixed(2) + '</div>' +
+      '<div style="font-size:10px;color:' + (r.estado==='Procesado'?'#16a34a':'#d97706') + '">' + r.estado + '</div></div>' +
+      (r.comprobante ? '<a href="' + r.comprobante + '" target="_blank" title="Ver comprobante" style="font-size:16px;text-decoration:none;flex-shrink:0">🔗</a>' : '') +
+      '</div>'
+    ).join('');
+  } catch(e) { document.getElementById('ultimos-lista').innerHTML = '<div style="color:#94a3b8;font-size:13px">Error cargando datos</div>'; }
+}
+
+function actualizarDriveTip() {
+  const cliente = document.getElementById('f-cliente').value.trim() || 'Cliente';
+  const d = new Date();
+  const mes = d.toLocaleString('es', {month:'long'});
+  const mesNum = String(d.getMonth()+1).padStart(2,'0');
+  const anio = d.getFullYear();
+  const dia = String(d.getDate()).padStart(2,'0');
+  const clienteSlug = cliente.replace(/\s+/g,'_').toUpperCase();
+  document.getElementById('drive-path').textContent = 'Cobros-Pagos / ' + anio + ' / ' + mesNum + '-' + mes.charAt(0).toUpperCase() + mes.slice(1);
+  document.getElementById('drive-nombre').textContent = tipoActual.toUpperCase() + '_' + clienteSlug + '_' + dia + '-' + mesNum + '-' + anio;
+}
+
+function copiarNombreSugerido() {
+  const nombre = document.getElementById('drive-nombre').textContent;
+  const btn = document.getElementById('btn-copiar-nombre');
+  navigator.clipboard.writeText(nombre).then(() => {
+    btn.textContent='✓ Copiado!'; btn.style.background='#d4ecc4';
+    setTimeout(()=>{btn.textContent='📋 Copiar nombre';btn.style.background='';},2000);
+  });
+}
+
+document.getElementById('f-cliente').addEventListener('input', actualizarDriveTip);
+
+cargarUltimos();
+actualizarDriveTip();
+verificarDrive();
+cargarProveedores();
+
+const urlTipo = new URLSearchParams(window.location.search).get('tipo');
+if (urlTipo === 'Pago') setTipo('Pago');
+else setTipo('Cobro');
+</script>
+{% endblock %}

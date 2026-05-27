@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Mail al proveedor — {{ factura.proveedor_nombre }}{% endblock %}
+{% block content %}
+<div style="max-width:720px">
+<div class="top-actions">
+  <h1>✉️ Mail — {{ factura.proveedor_nombre }}</h1>
+  <a href="/pagos" class="btn btn-outline">← Volver a pagos</a>
+</div>
+
+{% if not carpeta_ok %}
+<div class="alert-box warning" style="margin-bottom:16px">
+  ⚠️ No configuraste la carpeta de comprobantes.
+  <a href="/configuracion" style="color:#7a5c00;font-weight:700">Configurarla ahora →</a>
+</div>
+{% endif %}
+
+<div class="card" style="margin-bottom:16px">
+  <div style="font-weight:700;margin-bottom:10px">📎 Comprobante a adjuntar</div>
+  {% if archivos_encontrados %}
+  <div style="background:#dcfce7;border:1px solid #86efac;border-radius:6px;padding:10px 14px;margin-bottom:10px">
+    <div style="font-size:13px;font-weight:700;color:#166534;margin-bottom:8px">✅ {{ archivos_encontrados|length }} archivo(s) encontrado(s) automáticamente:</div>
+    {% for ruta, nombre in archivos_encontrados %}
+    <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer;font-size:13px">
+      <input type="radio" name="archivo_sel" value="{{ ruta }}" {% if loop.first %}checked{% endif %} onchange="document.getElementById('archivo_path_hidden').value=this.value">
+      <span>📄 <strong>{{ nombre }}</strong></span>
+      <span style="color:#888;font-size:11px;word-break:break-all">{{ ruta }}</span>
+    </label>
+    {% endfor %}
+    <label style="display:flex;align-items:center;gap:8px;margin-top:8px;cursor:pointer;font-size:13px">
+      <input type="radio" name="archivo_sel" value="" onchange="document.getElementById('archivo_path_hidden').value=''">
+      <span style="color:#666">Sin adjunto</span>
+    </label>
+  </div>
+  {% else %}
+  {% if carpeta_ok %}
+  <div class="alert-box warning" style="margin-bottom:10px">
+    No se encontró ningún archivo que coincida con
+    <code style="font-size:12px;background:#fff3cd;padding:1px 5px;border-radius:3px">PAGO_{{ factura.proveedor_nombre|upper|replace(' ','_') }}_*{{ pago.fecha_pago|replace('-','_') }}*</code>
+  </div>
+  {% endif %}
+  <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:4px">Ruta del archivo (pegá la ruta completa):</label>
+  <input id="ruta_manual" type="text" placeholder="Ej: C:\Comprobantes\2026\04\PAGO_SISPRO_22_04_2026.pdf" style="font-size:12px"
+         oninput="document.getElementById('archivo_path_hidden').value=this.value">
+  {% endif %}
+</div>
+
+<div class="card" style="margin-bottom:16px">
+  <div style="font-weight:700;margin-bottom:10px">🎨 Tono del mail</div>
+  <div style="display:flex;gap:8px">
+    <button type="button" class="btn btn-outline btn-sm tono-btn" id="btn-formal" onclick="setTono('formal')">Formal</button>
+    <button type="button" class="btn btn-outline btn-sm tono-btn" id="btn-breve" onclick="setTono('breve')">Breve y directo</button>
+    <button type="button" class="btn btn-outline btn-sm tono-btn" id="btn-cordial" onclick="setTono('cordial')">Cordial</button>
+  </div>
+</div>
+
+<div class="card" style="font-family:Arial,sans-serif;font-size:14px;line-height:1.8;margin-bottom:16px">
+  <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #eee">
+    <div><span style="color:#888;font-size:12px;font-weight:700">PARA:</span>
+      {% if factura.proveedor_email %}<span style="color:#1F4E79">{{ factura.proveedor_email }}</span>
+      {% else %}<span style="color:#999;font-style:italic">[ email del proveedor — <a href="/proveedores/{{ factura.proveedor_id }}/editar">agregarlo en Proveedores</a> ]</span>{% endif %}
+    </div>
+    <div style="margin-top:4px"><span style="color:#888;font-size:12px;font-weight:700">ASUNTO:</span> <span id="campo-asunto"></span></div>
+  </div>
+  <div id="cuerpo-mail" style="white-space:pre-line;color:#222"></div>
+</div>
+
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+  <button class="btn btn-outline" onclick="copiarMail()">📋 Copiar texto</button>
+  <form method="post" action="/pagos/{{ pago.id }}/descargar_eml" style="display:inline">
+    <input type="hidden" id="archivo_path_hidden" name="archivo_path" value="{% if archivos_encontrados %}{{ archivos_encontrados[0][0] }}{% endif %}">
+    <input type="hidden" name="tono" id="tono_hidden" value="formal">
+    <button type="submit" class="btn btn-primary">⬇️ Descargar .eml (con adjunto)</button>
+  </form>
+  {% if factura.proveedor_email %}
+  <button class="btn btn-success" onclick="abrirMailto()">📨 Abrir en Outlook</button>
+  {% endif %}
+</div>
+
+<div id="toast-mail" style="display:none;padding:10px 14px;background:#dcfce7;border:1px solid #86efac;border-radius:6px;color:#166534;font-size:13px;font-weight:600;margin-bottom:12px">✅ Texto copiado al portapapeles</div>
+
+<div class="card" style="background:#f8f9fa;font-size:12px;color:#666;line-height:1.8">
+  <strong>Cómo usar el .eml:</strong> Descargá el archivo → doble clic → se abre en Outlook con el asunto, el cuerpo y el comprobante <strong>ya adjunto</strong>. Solo revisás y le das Enviar.
+</div>
+</div>
+
+<script>
+const prov    = {{ factura.proveedor_nombre | tojson }};
+const facts   = [{% for f in facturas_batch %}{ numero:{{ f.numero|tojson }}, importe:{{ f.importe }}, moneda:{{ f.moneda|tojson }} },{% endfor %}];
+const total   = facts.reduce((a,f)=>a+f.importe, 0);
+const moneda  = facts.length ? facts[0].moneda : 'USD';
+const fecha   = {{ pago.fecha_pago | tojson }};
+const ref     = {{ (pago.referencia or '') | tojson }};
+const comp    = {{ (pago.comprobante or '') | tojson }};
+const empresa = {{ nombre_empresa | tojson }};
+const email   = {{ (factura.proveedor_email or '') | tojson }};
+let tonoActual = 'formal';
+
+function buildAsunto() {
+  return facts.length===1
+    ? `Comprobante de pago — ${facts[0].numero}`
+    : `Comprobante de pago — ${prov} (${facts.length} facturas)`;
+}
+
+function buildBody(tono) {
+  const lista   = facts.map(f=>`  • ${f.numero} — ${f.moneda} ${f.importe.toFixed(2)}`).join('\n');
+  const tot     = `${moneda} ${total.toFixed(2)}`;
+  const refL    = ref  ? `Referencia: ${ref}\n` : '';
+  const compL   = comp ? `Comprobante: ${comp}\n` : '';
+  if (tono==='breve')
+    return `Hola,\n\nLes informamos que realizamos el pago de ${tot} con fecha ${fecha}.\n\nFacturas abonadas:\n${lista}\n\n${refL}Adjunto comprobante de transferencia.\n\nSaludos,\n${empresa}`;
+  if (tono==='cordial')
+    return `Estimados,\n\nEsperamos que estén muy bien. Nos comunicamos para informarles que hemos procesado el pago correspondiente a las siguientes facturas:\n\n${lista}\n\nTotal abonado: ${tot}\nFecha de pago: ${fecha}\n${refL}${compL}\nAdjuntamos el comprobante para su registro. Por favor confirmen la recepción.\n\nMuchas gracias y saludos cordiales,\n${empresa}`;
+  return `Estimados,\n\nPor medio del presente les comunicamos que hemos efectuado el pago correspondiente a las siguientes facturas:\n\n${lista}\n\nTotal abonado: ${tot}\nFecha de pago: ${fecha}\n${refL}${compL}Adjuntamos el comprobante de transferencia para su registro.\n\nQuedamos a disposición ante cualquier consulta.\n\nSaludos cordiales,\n${empresa}`;
+}
+
+function setTono(t) {
+  tonoActual = t;
+  document.getElementById('cuerpo-mail').textContent = buildBody(t);
+  document.getElementById('campo-asunto').textContent = buildAsunto();
+  document.getElementById('tono_hidden').value = t;
+  document.querySelectorAll('.tono-btn').forEach(b=>b.style.cssText='');
+  document.getElementById(`btn-${t}`).style.cssText='background:#1F4E79!important;color:#fff!important;';
+}
+
+function copiarMail() {
+  navigator.clipboard.writeText(`Asunto: ${buildAsunto()}\n\n${buildBody(tonoActual)}`).then(()=>{
+    const t=document.getElementById('toast-mail'); t.style.display='block';
+    setTimeout(()=>t.style.display='none',3000);
+  });
+}
+
+function abrirMailto() {
+  window.location.href=`mailto:${email}?subject=${encodeURIComponent(buildAsunto())}&body=${encodeURIComponent(buildBody(tonoActual))}`;
+}
+
+document.querySelectorAll('input[name="archivo_sel"]').forEach(r=>{
+  r.addEventListener('change',()=>document.getElementById('archivo_path_hidden').value=r.value);
+});
+
+setTono('formal');
+</script>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Proveedores{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Proveedores</h1>
+  <a href="/proveedores/nuevo" class="btn btn-primary">+ Nuevo proveedor</a>
+</div>
+<div class="search-bar">
+  <span class="search-icon">🔍</span>
+  <input type="text" id="buscar-provs" placeholder="Buscar proveedor por nombre, razón social...">
+  <button class="search-clear">✕</button>
+</div>
+<div style="font-size:12px;color:#64748b;margin-top:-14px;margin-bottom:12px" id="buscar-provs-count"></div>
+<div class="card" style="padding:0;overflow:hidden">
+<table>
+  <thead><tr>
+    <th>Nombre</th><th>Moneda</th><th>Plazo</th><th>Descuento</th><th>Facturas pend.</th><th>Deuda total</th><th>Saldo a favor</th><th></th>
+  </tr></thead>
+  <tbody id="tbody-provs">
+  {% for p in proveedores %}
+  <tr>
+    <td>
+      <strong>{{ p.nombre }}</strong>
+      {% if p.razon_social %}<br><span style="color:#888;font-size:12px">{{ p.razon_social }}</span>{% endif %}
+      {% if p.nota_plazo %}<br><span style="color:#94a3b8;font-size:11px;font-style:italic">{{ p.nota_plazo }}</span>{% endif %}
+    </td>
+    <td><span class="{% if p.moneda=='USD' %}moneda-usd{% else %}moneda-uyu{% endif %}">{{ p.moneda }}</span></td>
+    <td style="white-space:nowrap">{{ p.plazo_dias }} días</td>
+    <td>
+      {% set desc = p.descuento_pct|default(0)|float %}
+      {% if desc > 0 %}
+        <span style="background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700">
+          {{ desc|int }}% desc.
+        </span>
+      {% else %}
+        <span style="color:#94a3b8;font-size:12px">—</span>
+      {% endif %}
+    </td>
+    <td>
+      {% if p.facturas_pendientes > 0 %}
+        <span class="badge badge-yellow">{{ p.facturas_pendientes }}</span>
+      {% else %}—{% endif %}
+    </td>
+    <td>
+      {% if p.deuda_total > 0 %}
+        <strong>{{ "%.2f"|format(p.deuda_total) }} {{ p.moneda }}</strong>
+      {% else %}—{% endif %}
+    </td>
+    <td>
+      {% set saldo = p.saldo_favor|default(0)|float %}
+      {% if saldo > 0 %}
+        <span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700">✓ {{ "%.2f"|format(saldo) }} {{ p.moneda }}</span>
+      {% else %}
+        <span style="color:#94a3b8;font-size:12px">—</span>
+      {% endif %}
+    </td>
+    <td style="display:flex;gap:6px;align-items:center">
+      <a href="/proveedores/{{ p.id }}/editar" class="btn btn-outline btn-sm">✏️ Editar</a>
+      <a href="/proveedores/{{ p.id }}/saldo-favor" class="btn btn-sm" style="background:#f0fdf4;color:#166534;border:1px solid #86efac">💰 Saldo</a>
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<script>initBuscador('buscar-provs','#tbody-provs tr');</script>
+{% endblock %}

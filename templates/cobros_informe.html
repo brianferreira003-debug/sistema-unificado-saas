@@ -1,0 +1,433 @@
+{% extends "base.html" %}
+{% block title %}Informe de Cobros y Pagos{% endblock %}
+{% block page_title %}Informe de Cobros y Pagos{% endblock %}
+{% block content %}
+ 
+<!-- Barra de navegación de semana -->
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+  <button class="btn btn-outline btn-sm" onclick="cambiarSemana(-1)">◀ Anterior</button>
+  <span id="week-label" style="font-size:14px;font-weight:700;color:#1a3a5c;min-width:200px;text-align:center"></span>
+  <button class="btn btn-outline btn-sm" onclick="cambiarSemana(1)">Siguiente ▶</button>
+ 
+  <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn btn-sm" style="background:#e8f5e9;color:#1b5e20;border-color:#a5d6a7;font-weight:600"
+            onclick="exportarExcel()">📊 Excel</button>
+    <button class="btn btn-sm" style="background:#fff8e0;color:#6d4000;border-color:#e0c060;font-weight:600"
+            onclick="generarInformeJefa()">📋 Informe Jefa</button>
+    <button class="btn btn-sm" style="background:#f0f0e8;color:#444;border-color:#ccc"
+            onclick="abrirConfigHistorial()">⚙️ Historial previo</button>
+    <button class="btn btn-outline btn-sm" onclick="window.print()">🖨️ Imprimir / PDF</button>
+  </div>
+</div>
+ 
+<!-- Título y fecha -->
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px">
+  <div>
+    <h2 style="margin:0;font-size:20px">Informe de Cobros y Pagos</h2>
+    <div id="inf-periodo-label" style="font-size:13px;color:#64748b;margin-top:2px"></div>
+  </div>
+  <div id="inf-fecha-estado" style="font-size:12px;color:#94a3b8"></div>
+</div>
+ 
+<!-- Stats resumen -->
+<div id="inf-resumen" class="grid4" style="margin-bottom:24px"></div>
+ 
+<!-- Tabla Cobros -->
+<div style="margin-bottom:24px">
+  <h3 style="color:#166534;margin-bottom:10px">💚 Cobros del período</h3>
+  <div style="overflow-x:auto;border-radius:10px;border:1px solid #e2e8f0">
+    <table style="margin:0">
+      <thead>
+        <tr style="background:#f0fdf4">
+          <th>FECHA</th><th>CLIENTE</th><th>MEDIO</th><th>BANCO</th>
+          <th style="text-align:right">MONTO UYU</th>
+          <th style="text-align:right">MONTO USD</th>
+          <th>ESTADO</th><th>NOTA</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-cobros-inf"></tbody>
+      <tfoot id="tfoot-cobros-inf"></tfoot>
+    </table>
+  </div>
+</div>
+ 
+<!-- Tabla Pagos -->
+<div style="margin-bottom:24px">
+  <h3 style="color:#991b1b;margin-bottom:10px">🔴 Pagos del período</h3>
+  <div style="overflow-x:auto;border-radius:10px;border:1px solid #e2e8f0">
+    <table style="margin:0">
+      <thead>
+        <tr style="background:#fff5f5">
+          <th>FECHA</th><th>PROVEEDOR</th><th>MEDIO</th><th>BANCO</th>
+          <th style="text-align:right">MONTO UYU</th>
+          <th style="text-align:right">MONTO USD</th>
+          <th>ESTADO</th><th>NOTA</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-pagos-inf"></tbody>
+      <tfoot id="tfoot-pagos-inf"></tfoot>
+    </table>
+  </div>
+</div>
+ 
+<!-- Neto -->
+<div id="inf-neto-box" style="border:2px solid #e2e8f0;border-radius:10px;padding:18px;background:#f8fafc"></div>
+ 
+<script>
+let semanaOffset = 0;
+const HIST_KEY = 'informe_jefa_historial_v1';
+ 
+// ─── Helpers de fecha ────────────────────────────────────────────────────────
+function getLunes(off) {
+  const d = new Date();
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + off * 7);
+  return d.toISOString().split('T')[0];
+}
+function getDomingo(off) {
+  const d = new Date(getLunes(off));
+  d.setDate(d.getDate() + 6);
+  return d.toISOString().split('T')[0];
+}
+function fmtFecha(iso) {
+  const [y, m, dd] = iso.split('-'); return dd + '/' + m + '/' + y;
+}
+function fmtCorto(iso) {
+  const [y, m, dd] = iso.split('-'); return dd + '/' + m;
+}
+function fmtN(n) {
+  return Math.abs(n).toLocaleString('es-UY', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+function fmtGer(n) {
+  return Math.abs(n).toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+ 
+function cambiarSemana(dir) { semanaOffset += dir; renderInforme(); }
+ 
+// ─── Cargar datos desde API ───────────────────────────────────────────────────
+async function cargarDatosPeriodo(desde, hasta) {
+  const r = await fetch(`/api/cobros_pagos?desde=${desde}&hasta=${hasta}`);
+  return await r.json();
+}
+ 
+// ─── Render principal ────────────────────────────────────────────────────────
+async function renderInforme() {
+  const lu = getLunes(semanaOffset), do_ = getDomingo(semanaOffset);
+  document.getElementById('week-label').textContent =
+    fmtCorto(lu) + ' - ' + fmtCorto(do_) + (semanaOffset === 0 ? ' (esta semana)' : '');
+  document.getElementById('inf-fecha-estado').textContent =
+    'Emitido: ' + new Date().toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  document.getElementById('inf-periodo-label').textContent =
+    'Período: ' + fmtFecha(lu) + ' al ' + fmtFecha(do_);
+ 
+  let datos = [];
+  try { datos = await cargarDatosPeriodo(lu, do_); } catch(e) {}
+ 
+  const cobros = datos.filter(r => r.tipo === 'Cobro').sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const pagos  = datos.filter(r => r.tipo === 'Pago').sort((a, b) => a.fecha.localeCompare(b.fecha));
+ 
+  const totCobUYU = cobros.filter(r => r.moneda === 'UYU').reduce((s, r) => s + r.monto, 0);
+  const totCobUSD = cobros.filter(r => r.moneda === 'USD').reduce((s, r) => s + r.monto, 0);
+  const totPagUYU = pagos.filter(r => r.moneda === 'UYU').reduce((s, r) => s + r.monto, 0);
+  const totPagUSD = pagos.filter(r => r.moneda === 'USD').reduce((s, r) => s + r.monto, 0);
+  const netoUYU = totCobUYU - totPagUYU, netoUSD = totCobUSD - totPagUSD;
+ 
+  // Stats
+  document.getElementById('inf-resumen').innerHTML =
+    stat('COBROS UYU', '$' + fmtN(totCobUYU), 'green') +
+    stat('COBROS USD', 'U$' + fmtN(totCobUSD), 'green') +
+    stat('PAGOS UYU',  '$' + fmtN(totPagUYU), 'red') +
+    stat('PAGOS USD',  'U$' + fmtN(totPagUSD), 'red');
+ 
+  // Filas
+  const filaReg = (r) => `<tr>
+    <td style="white-space:nowrap;font-size:12px;color:#555">${fmtFecha(r.fecha)}</td>
+    <td style="font-weight:500;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.cliente}</td>
+    <td style="font-size:12px;color:#666">${r.medio || '-'}</td>
+    <td style="font-size:12px;color:#666">${r.banco || '-'}</td>
+    <td style="text-align:right;font-family:var(--mono)">${r.moneda === 'UYU' ? '$' + fmtGer(r.monto) : '-'}</td>
+    <td style="text-align:right;font-family:var(--mono)">${r.moneda === 'USD' ? 'U$' + fmtGer(r.monto) : '-'}</td>
+    <td><span style="font-size:11px;font-weight:600;color:${r.estado==='Procesado'?'#16a34a':'#d97706'}">${r.estado}</span></td>
+    <td style="font-size:12px;color:#888;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.nota || '-'}</td>
+  </tr>`;
+ 
+  const filaTotal = (uyu, usd, label, color) => `<tr style="background:#f8fafc;font-weight:700">
+    <td colspan="4" style="text-align:right;padding-right:12px">${label}</td>
+    <td style="text-align:right;color:${color};font-family:var(--mono)">$${fmtGer(uyu)}</td>
+    <td style="text-align:right;color:${color};font-family:var(--mono)">U$${fmtGer(usd)}</td>
+    <td colspan="2"></td>
+  </tr>`;
+ 
+  const vacio = (msg) => `<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:20px">${msg}</td></tr>`;
+ 
+  document.getElementById('tbody-cobros-inf').innerHTML = cobros.length ? cobros.map(filaReg).join('') : vacio('Sin cobros en este período');
+  document.getElementById('tfoot-cobros-inf').innerHTML = cobros.length ? filaTotal(totCobUYU, totCobUSD, 'TOTAL COBROS', '#16a34a') : '';
+  document.getElementById('tbody-pagos-inf').innerHTML  = pagos.length  ? pagos.map(filaReg).join('')  : vacio('Sin pagos en este período');
+  document.getElementById('tfoot-pagos-inf').innerHTML  = pagos.length  ? filaTotal(totPagUYU, totPagUSD, 'TOTAL PAGOS', '#dc2626') : '';
+ 
+  document.getElementById('inf-neto-box').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div>
+        <div style="font-size:11px;color:#64748b;text-transform:uppercase;font-weight:700;margin-bottom:4px">Resultado neto UYU</div>
+        <div style="font-size:22px;font-weight:700;color:${netoUYU>=0?'#166534':'#991b1b'}">${netoUYU>=0?'+ ':''} $${fmtGer(Math.abs(netoUYU))}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:#64748b;text-transform:uppercase;font-weight:700;margin-bottom:4px">Resultado neto USD</div>
+        <div style="font-size:22px;font-weight:700;color:${netoUSD>=0?'#166534':'#991b1b'}">${netoUSD>=0?'+ ':''}U$${fmtGer(Math.abs(netoUSD))}</div>
+      </div>
+    </div>`;
+}
+ 
+function stat(label, val, color) {
+  return `<div class="stat">
+    <div class="label">${label}</div>
+    <div class="value ${color}">${val}</div>
+  </div>`;
+}
+ 
+// ─── Excel ───────────────────────────────────────────────────────────────────
+async function exportarExcel() {
+  const lu = getLunes(semanaOffset), do_ = getDomingo(semanaOffset);
+  let datos = [];
+  try { datos = await cargarDatosPeriodo(lu, do_); } catch(e) {}
+  const cobros = datos.filter(r => r.tipo === 'Cobro').sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const pagos  = datos.filter(r => r.tipo === 'Pago').sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const totCobUYU = cobros.filter(r=>r.moneda==='UYU').reduce((s,r)=>s+r.monto,0);
+  const totCobUSD = cobros.filter(r=>r.moneda==='USD').reduce((s,r)=>s+r.monto,0);
+  const totPagUYU = pagos.filter(r=>r.moneda==='UYU').reduce((s,r)=>s+r.monto,0);
+  const totPagUSD = pagos.filter(r=>r.moneda==='USD').reduce((s,r)=>s+r.monto,0);
+  const hoy = new Date().toLocaleDateString('es-UY',{day:'2-digit',month:'2-digit',year:'numeric'});
+ 
+  function generarXLSX() {
+    const XLSX = window.XLSX;
+    const wb = XLSX.utils.book_new();
+    const resumenData = [
+      ['INFORME DE COBROS Y PAGOS','',''],
+      ['Período:', fmtFecha(lu)+' al '+fmtFecha(do_),''],
+      ['Emitido:', hoy,''],['','',''],
+      ['RESUMEN','UYU','USD'],
+      ['Total Cobros', totCobUYU, totCobUSD],
+      ['Total Pagos',  totPagUYU, totPagUSD],
+      ['Resultado Neto', totCobUYU-totPagUYU, totCobUSD-totPagUSD],
+    ];
+    const wsRes = XLSX.utils.aoa_to_sheet(resumenData);
+    wsRes['!cols'] = [{wch:22},{wch:16},{wch:16}];
+    XLSX.utils.book_append_sheet(wb, wsRes, 'Resumen');
+ 
+    const cobrosData = [['Fecha','Cliente','Medio','Banco','Monto UYU','Monto USD','Estado','Nota']];
+    cobros.forEach(r => cobrosData.push([fmtFecha(r.fecha),r.cliente,r.medio,r.banco||'',
+      r.moneda==='UYU'?r.monto:'', r.moneda==='USD'?r.monto:'', r.estado, r.nota||'']));
+    cobrosData.push(['','','','','TOTAL', totCobUYU, totCobUSD,'']);
+    const wsCob = XLSX.utils.aoa_to_sheet(cobrosData);
+    wsCob['!cols'] = [{wch:12},{wch:24},{wch:14},{wch:12},{wch:14},{wch:14},{wch:12},{wch:30}];
+    XLSX.utils.book_append_sheet(wb, wsCob, 'Cobros');
+ 
+    const pagosData = [['Fecha','Proveedor','Medio','Banco','Monto UYU','Monto USD','Estado','Nota']];
+    pagos.forEach(r => pagosData.push([fmtFecha(r.fecha),r.cliente,r.medio,r.banco||'',
+      r.moneda==='UYU'?r.monto:'', r.moneda==='USD'?r.monto:'', r.estado, r.nota||'']));
+    pagosData.push(['','','','','TOTAL', totPagUYU, totPagUSD,'']);
+    const wsPag = XLSX.utils.aoa_to_sheet(pagosData);
+    wsPag['!cols'] = [{wch:12},{wch:24},{wch:14},{wch:12},{wch:14},{wch:14},{wch:12},{wch:30}];
+    XLSX.utils.book_append_sheet(wb, wsPag, 'Pagos');
+ 
+    XLSX.writeFile(wb, 'informe_cobros_pagos_' + lu + '_al_' + do_ + '.xlsx');
+  }
+ 
+  if (window.XLSX) { generarXLSX(); }
+  else {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = generarXLSX;
+    s.onerror = () => alert('Error al cargar librería Excel');
+    document.head.appendChild(s);
+  }
+}
+ 
+// ─── Historial previo (localStorage) ────────────────────────────────────────
+function cargarHistorialPrevio() {
+  try { return JSON.parse(localStorage.getItem(HIST_KEY)) || {acr:{}, deu:{}}; }
+  catch(e) { return {acr:{}, deu:{}}; }
+}
+function guardarHistorialPrevio(h) { localStorage.setItem(HIST_KEY, JSON.stringify(h)); }
+ 
+function abrirConfigHistorial() {
+  const h = cargarHistorialPrevio();
+  const acrTxt = Object.keys(h.acr).sort().map(k => k+'\t'+h.acr[k].uyu+'\t'+h.acr[k].usd).join('\n');
+  const deuTxt = Object.keys(h.deu).sort().map(k => k+'\t'+h.deu[k].uyu+'\t'+h.deu[k].usd).join('\n');
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;display:flex;align-items:center;justify-content:center;padding:1rem;';
+  modal.innerHTML = `<div style="background:#fff;border-radius:12px;padding:1.5rem;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.2);">
+    <h2 style="font-size:16px;font-weight:700;margin-bottom:6px">Historial previo del informe</h2>
+    <p style="font-size:12px;color:#666;margin-bottom:14px;line-height:1.6">Pegá las filas históricas. Formato: <code style="background:#f0f0e8;padding:1px 4px;border-radius:3px">FECHA&nbsp;&nbsp;UYU&nbsp;&nbsp;USD</code> (separado por TAB). Fechas en <strong>YYYYMMDD</strong>.</p>
+    <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#666">Acreedores (Pagos históricos)</label>
+    <textarea id="hist-acr-input" style="width:100%;height:120px;font-family:monospace;font-size:12px;padding:8px;border:1px solid #ccc;border-radius:6px;margin:4px 0 12px;resize:vertical;box-sizing:border-box" placeholder="20260123&#9;-45553764&#9;-4748977">${acrTxt}</textarea>
+    <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#666">Deudores (Cobros históricos)</label>
+    <textarea id="hist-deu-input" style="width:100%;height:120px;font-family:monospace;font-size:12px;padding:8px;border:1px solid #ccc;border-radius:6px;margin:4px 0 12px;resize:vertical;box-sizing:border-box" placeholder="20260116&#9;32409504&#9;8196">${deuTxt}</textarea>
+    <p style="font-size:11px;color:#888;margin-bottom:14px">💡 Tip: copiá las columnas desde Excel y pegualas acá — el separador de TAB funciona perfecto.</p>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button onclick="this.closest('div').parentElement.remove()" style="padding:8px 14px;border:1px solid #ccc;border-radius:7px;background:#fff;cursor:pointer;font-size:13px">Cancelar</button>
+      <button onclick="guardarHistPrevio()" style="padding:8px 14px;border:none;border-radius:7px;background:#1a3a5c;color:#fff;cursor:pointer;font-size:13px;font-weight:700">Guardar historial</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+ 
+function guardarHistPrevio() {
+  const parsear = (txt) => {
+    const obj = {};
+    txt.split('\n').forEach(l => {
+      const p = l.trim().split(/\t+/);
+      if (p.length >= 3 && /^\d{8}$/.test(p[0])) {
+        obj[p[0]] = { uyu: Math.abs(parseFloat(p[1].replace(/[^0-9.\-]/g,''))||0),
+                      usd: Math.abs(parseFloat(p[2].replace(/[^0-9.\-]/g,''))||0) };
+      }
+    });
+    return obj;
+  };
+  const h = {
+    acr: parsear(document.getElementById('hist-acr-input').value),
+    deu: parsear(document.getElementById('hist-deu-input').value)
+  };
+  guardarHistorialPrevio(h);
+  document.querySelector('div[style*="position:fixed"]').remove();
+}
+ 
+// ─── Informe Jefa ────────────────────────────────────────────────────────────
+async function generarInformeJefa() {
+  let todosLosDatos = [];
+  try {
+    const r = await fetch('/api/cobros_pagos');
+    todosLosDatos = await r.json();
+  } catch(e) {}
+ 
+  const hist = cargarHistorialPrevio();
+  const fmtNum = n => Math.abs(n).toLocaleString('es-UY', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const hoy = new Date().toLocaleDateString('es-UY', {day:'2-digit', month:'2-digit', year:'numeric'});
+ 
+  // Agrupar por semana (clave YYYYMMDD del lunes)
+  const semanas = {};
+  todosLosDatos.forEach(r => {
+    const d = new Date(r.fecha + 'T12:00:00');
+    const lunes = new Date(d);
+    lunes.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    const key = lunes.toISOString().split('T')[0].replace(/-/g, '');
+    if (!semanas[key]) semanas[key] = {acruyu:0, acrusd:0, deuuyu:0, deuusd:0};
+    if (r.tipo === 'Pago')  { if (r.moneda==='UYU') semanas[key].acruyu+=r.monto; else semanas[key].acrusd+=r.monto; }
+    else                    { if (r.moneda==='UYU') semanas[key].deuuyu+=r.monto; else semanas[key].deuusd+=r.monto; }
+  });
+ 
+  // Combinar con historial previo
+  const acrMap = {};
+  const deuMap = {};
+  Object.entries(hist.acr).forEach(([k,v]) => acrMap[k] = {uyu: v.uyu, usd: v.usd});
+  Object.entries(hist.deu).forEach(([k,v]) => deuMap[k] = {uyu: v.uyu, usd: v.usd});
+  Object.entries(semanas).forEach(([k,v]) => {
+    if (v.acruyu || v.acrusd) { if (!acrMap[k]) acrMap[k]={uyu:0,usd:0}; acrMap[k].uyu+=v.acruyu; acrMap[k].usd+=v.acrusd; }
+    if (v.deuuyu || v.deuusd) { if (!deuMap[k]) deuMap[k]={uyu:0,usd:0}; deuMap[k].uyu+=v.deuuyu; deuMap[k].usd+=v.deuusd; }
+  });
+ 
+  const acrKeys = Object.keys(acrMap).sort();
+  const deuKeys = Object.keys(deuMap).sort();
+ 
+  const estiloTh = 'background:#000;color:#fff;padding:5px 14px;text-align:center;font-weight:bold;border:1px solid #000;font-size:13px;';
+  const estiloTd = 'padding:4px 14px;border:1px solid #ccc;text-align:center;font-size:13px;';
+  const estiloTd1 = 'padding:4px 14px;border:1px solid #ccc;text-align:left;font-family:Courier New,monospace;font-size:13px;';
+  const estiloTabla = 'border-collapse:collapse;width:auto;min-width:400px;margin-bottom:8px;font-family:Arial,sans-serif;';
+ 
+  const filasAcr = acrKeys.map(k =>
+    `<tr><td style="${estiloTd1}">${k}</td><td style="${estiloTd}">-${fmtNum(acrMap[k].uyu)}</td><td style="${estiloTd}">-${fmtNum(acrMap[k].usd)}</td></tr>`
+  ).join('') || `<tr><td colspan="3" style="${estiloTd}color:#999">Sin datos</td></tr>`;
+  const filasDeu = deuKeys.map(k =>
+    `<tr><td style="${estiloTd1}">${k}</td><td style="${estiloTd}">${fmtNum(deuMap[k].uyu)}</td><td style="${estiloTd}">${fmtNum(deuMap[k].usd)}</td></tr>`
+  ).join('') || `<tr><td colspan="3" style="${estiloTd}color:#999">Sin datos</td></tr>`;
+ 
+  const contenidoHTML = `<div style="font-family:Arial,sans-serif;">
+<h2 style="font-size:18px;font-weight:bold;margin:0 0 4px">Informe de Deudores y Acreedores</h2>
+<div style="font-size:13px;margin-bottom:16px;color:#333">Estado al ${hoy}</div>
+<h3 style="font-size:14px;font-weight:bold;margin:16px 0 6px">Acreedores</h3>
+<table style="${estiloTabla}"><tbody>
+  <tr><th style="${estiloTh}">FECHA</th><th style="${estiloTh}">Acreedores UYU</th><th style="${estiloTh}">Acreedores USD</th></tr>
+  ${filasAcr}
+</tbody></table>
+<h3 style="font-size:14px;font-weight:bold;margin:16px 0 6px">Deudores</h3>
+<table style="${estiloTabla}"><tbody>
+  <tr><th style="${estiloTh}">FECHA</th><th style="${estiloTh}">Deudores UYU</th><th style="${estiloTh}">Deudores USD</th></tr>
+  ${filasDeu}
+</tbody></table>
+</div>`;
+ 
+  const contenidoJS = JSON.stringify(contenidoHTML);
+ 
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<title>Informe de Deudores y Acreedores</title>
+<style>
+  body{font-family:Arial,sans-serif;font-size:14px;color:#000;margin:24px}
+  h2{font-size:18px;font-weight:bold;margin-bottom:4px}
+  .sub{font-size:13px;margin-bottom:16px;color:#333}
+  h3{font-size:14px;font-weight:bold;margin:16px 0 6px}
+  table{border-collapse:collapse;width:auto;min-width:400px;margin-bottom:8px}
+  th{background:#000;color:#fff;padding:5px 14px;text-align:center;font-size:13px;font-weight:bold;border:1px solid #000}
+  td{padding:4px 14px;border:1px solid #ccc;font-size:13px;text-align:center}
+  td:first-child{text-align:left;font-family:'Courier New',monospace}
+  .acciones{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+  .btn-acc{padding:9px 18px;font-size:13px;cursor:pointer;font-family:Arial;border-radius:6px;border:1px solid #ccc;background:#fff;font-weight:600}
+  .btn-copiar{background:#e8f0fb;color:#1a4a9a;border-color:#b0c8f0}
+  .feedback{display:none;font-size:12px;color:#2d6a1a;font-weight:600;align-self:center}
+  @media print{.acciones{display:none}}
+</style>
+</head><body>
+<h2>Informe de Deudores y Acreedores</h2>
+<div class="sub">Estado al ${hoy}</div>
+<h3>Acreedores</h3>
+<table><tbody>
+  <tr><th>FECHA</th><th>Acreedores UYU</th><th>Acreedores USD</th></tr>
+  ${filasAcr}
+</tbody></table>
+<h3>Deudores</h3>
+<table><tbody>
+  <tr><th>FECHA</th><th>Deudores UYU</th><th>Deudores USD</th></tr>
+  ${filasDeu}
+</tbody></table>
+<div class="acciones">
+  <button class="btn-acc btn-copiar" onclick="copiarInforme()">📋 Copiar para pegar en mail</button>
+  <button class="btn-acc" onclick="window.print()">🖨️ Imprimir / PDF</button>
+  <span class="feedback" id="feedback-copia">✓ Copiado — ahora pegalo en el mail con Ctrl+V</span>
+</div>
+<script>
+function copiarInforme(){
+  const contenido=${contenidoJS};
+  try{
+    const blob=new Blob([contenido],{type:'text/html'});
+    const item=new ClipboardItem({'text/html':blob});
+    navigator.clipboard.write([item]).then(()=>{
+      document.getElementById('feedback-copia').style.display='inline';
+      setTimeout(()=>document.getElementById('feedback-copia').style.display='none',4000);
+    });
+  }catch(e){
+    const rng=document.createRange();rng.selectNode(document.body);
+    window.getSelection().removeAllRanges();window.getSelection().addRange(rng);
+    document.execCommand('copy');window.getSelection().removeAllRanges();
+    document.getElementById('feedback-copia').style.display='inline';
+    setTimeout(()=>document.getElementById('feedback-copia').style.display='none',4000);
+  }
+}
+<\/script>
+</body></html>`;
+ 
+  const ventana = window.open('', '_blank', 'width=700,height=650');
+  ventana.document.write(html);
+  ventana.document.close();
+}
+ 
+// ─── Init ────────────────────────────────────────────────────────────────────
+renderInforme();
+</script>
+ 
+<style>
+@media print {
+  .top-actions, nav, .btn { display: none !important; }
+}
+</style>
+ 
+{% endblock %}
+ 

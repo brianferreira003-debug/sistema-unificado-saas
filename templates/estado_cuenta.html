@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Estado de cuenta{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>📄 Importar estado de cuenta</h1>
+</div>
+
+<div class="alert-box info" style="margin-bottom:20px">
+  Subí el <strong>estado de cuenta en PDF</strong> de un proveedor. El sistema intentará detectar
+  automáticamente las facturas y sus importes. Vas a poder revisar y elegir cuáles importar.
+</div>
+
+{% if resultado and resultado.confirmado %}
+<div class="alert-box success">
+  ✅ Se importaron <strong>{{ resultado.importadas }}</strong> factura(s) nuevas.
+  {% if resultado.skipped %} {{ resultado.skipped }} ya existían y se omitieron.{% endif %}
+  <a href="/facturas" style="margin-left:12px;font-weight:600">Ver facturas →</a>
+</div>
+{% endif %}
+
+{% if resultado and resultado.error %}
+<div class="alert-box danger">⚠️ {{ resultado.error }}</div>
+{% endif %}
+
+<!-- Formulario de subida -->
+{% if not (resultado and resultado.facturas) %}
+<div class="card" style="max-width:600px">
+  <form method="post" enctype="multipart/form-data">
+    <div class="form-group">
+      <label>Archivo PDF del estado de cuenta</label>
+      <input type="file" name="archivo" accept=".pdf" required style="padding:6px">
+    </div>
+    <button type="submit" class="btn btn-primary">🔍 Analizar PDF</button>
+  </form>
+</div>
+{% endif %}
+
+<!-- Resultados del análisis -->
+{% if resultado and resultado.facturas is defined %}
+{% if resultado.facturas %}
+<div class="card" style="margin-bottom:16px">
+  <div style="font-weight:700;font-size:15px;margin-bottom:4px;color:#1a3a5c">
+    Se detectaron {{ resultado.facturas|length }} posibles facturas
+  </div>
+  <div style="font-size:12px;color:#64748b">
+    Revisá la lista, seleccioná las que corresponden y elegí el proveedor antes de importar.
+  </div>
+</div>
+
+<form method="post" action="/estado_cuenta/confirmar">
+  <div class="card" style="margin-bottom:16px">
+    <div class="form-row cols2">
+      <div class="form-group">
+        <label>Proveedor *</label>
+        <select name="proveedor_id" required>
+          <option value="">— Seleccionar proveedor —</option>
+          {% for p in proveedores %}
+          <option value="{{ p.id }}">{{ p.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Moneda *</label>
+        <select name="moneda">
+          <option value="USD">USD — Dólares</option>
+          <option value="UYU">UYU — Pesos</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px">
+    <div style="background:#1a3a5c;color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-weight:700">Facturas detectadas</span>
+      <div style="display:flex;gap:8px">
+        <button type="button" onclick="selAll(true)" class="btn btn-sm btn-light">Todas</button>
+        <button type="button" onclick="selAll(false)" class="btn btn-sm btn-light">Ninguna</button>
+      </div>
+    </div>
+    <table>
+      <thead><tr>
+        <th style="width:36px"><input type="checkbox" id="cb-all" onchange="selAll(this.checked)" checked></th>
+        <th>N° Documento</th><th>Fecha detectada</th><th>Importe</th><th>Línea original</th>
+      </tr></thead>
+      <tbody>
+      {% for f in resultado.facturas %}
+      <tr>
+        <td><input type="checkbox" name="factura_sel"
+             value="{{ f.numero }}|{{ f.importe }}|{{ f.fecha }}" checked class="fact-import-cb"></td>
+        <td style="font-weight:500">{{ f.numero }}</td>
+        <td>{{ f.fecha }}</td>
+        <td><strong>{{ "%.2f"|format(f.importe) }}</strong></td>
+        <td style="font-size:11px;color:#64748b;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+            title="{{ f.linea_original }}">{{ f.linea_original }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="display:flex;gap:10px;align-items:center">
+    <button type="submit" class="btn btn-success">✅ Importar seleccionadas</button>
+    <a href="/estado_cuenta" class="btn btn-outline">Volver a subir</a>
+    <span id="sel-count" style="font-size:13px;color:#64748b"></span>
+  </div>
+</form>
+
+{% elif resultado and not resultado.error and not resultado.confirmado %}
+<div class="alert-box warning">
+  No se detectaron facturas en el PDF. El documento puede estar en un formato no reconocido o ser una imagen escaneada.
+  <br><br>Podés <a href="/estado_cuenta" style="font-weight:600">intentar con otro archivo</a> o
+  <a href="/facturas/nueva" style="font-weight:600">cargar las facturas manualmente</a>.
+  {% if resultado.texto_muestra %}
+  <details style="margin-top:10px">
+    <summary style="cursor:pointer;font-size:12px">Ver texto extraído del PDF</summary>
+    <pre style="font-size:11px;background:#fff;padding:10px;border-radius:4px;margin-top:8px;white-space:pre-wrap;max-height:200px;overflow-y:auto">{{ resultado.texto_muestra }}</pre>
+  </details>
+  {% endif %}
+</div>
+{% endif %}
+{% endif %}
+
+<script>
+function selAll(val) {
+  document.querySelectorAll('.fact-import-cb').forEach(cb => cb.checked = val);
+  document.getElementById('cb-all').checked = val;
+  actualizarConteo();
+}
+function actualizarConteo() {
+  const sel = document.querySelectorAll('.fact-import-cb:checked').length;
+  const total = document.querySelectorAll('.fact-import-cb').length;
+  const el = document.getElementById('sel-count');
+  if (el) el.textContent = `${sel} de ${total} seleccionadas`;
+}
+document.querySelectorAll('.fact-import-cb').forEach(cb =>
+  cb.addEventListener('change', actualizarConteo)
+);
+actualizarConteo();
+</script>
+{% endblock %}

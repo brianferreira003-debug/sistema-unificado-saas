@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% block title %}Historial de Cobros y Pagos{% endblock %}
+{% block page_title %}Historial de Cobros y Pagos{% endblock %}
+{% block content %}
+
+<div class="top-actions">
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button onclick="filtrar('')"      id="f-all"   class="btn btn-sm btn-primary">Todos</button>
+    <button onclick="filtrar('Cobro')" id="f-cobro" class="btn btn-sm btn-outline">Solo Cobros</button>
+    <button onclick="filtrar('Pago')"  id="f-pago"  class="btn btn-sm btn-outline">Solo Pagos</button>
+    <button onclick="filtrarEstado('Pendiente')" id="f-pend" class="btn btn-sm btn-outline">Pendientes</button>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button onclick="exportarBackup()" class="btn btn-outline btn-sm">⬇️ Backup JSON</button>
+    <a href="/cobros-pagos" class="btn btn-primary btn-sm">+ Nuevo</a>
+  </div>
+</div>
+
+<!-- Búsqueda rápida -->
+<div class="search-bar">
+  <span class="search-icon">🔍</span>
+  <input type="text" id="buscador" placeholder="Buscar por cliente, banco, nota, monto...">
+  <button class="search-clear">✕</button>
+</div>
+
+<!-- Tabla -->
+<div style="border-radius:10px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)">
+<table>
+  <thead><tr>
+    <th>Fecha</th>
+    <th>Tipo</th>
+    <th>Cliente / Proveedor</th>
+    <th>Moneda</th>
+    <th style="text-align:right">Monto</th>
+    <th>Banco / Medio</th>
+    <th>Nota</th>
+    <th>Estado</th>
+    <th style="width:110px"></th>
+  </tr></thead>
+  <tbody id="tbody-historial">
+  {% for r in registros %}
+  <tr data-tipo="{{ r.tipo }}" data-estado="{{ r.estado }}" data-id="{{ r.id }}">
+    <td style="font-size:12px;color:#64748b;white-space:nowrap">{{ r.fecha }}</td>
+    <td>
+      {% if r.tipo=='Cobro' %}<span class="badge badge-green">Cobro</span>
+      {% else %}<span class="badge badge-orange">Pago</span>{% endif %}
+    </td>
+    <td>
+      <strong>{{ r.cliente }}</strong>
+      {% if r.comprobante %}<a href="{{ r.comprobante }}" target="_blank" style="font-size:11px;color:#2563eb;margin-left:6px">📎</a>{% endif %}
+    </td>
+    <td><span class="{% if r.moneda=='USD' %}moneda-usd{% else %}moneda-uyu{% endif %}">{{ r.moneda }}</span></td>
+    <td style="text-align:right;font-family:var(--mono);font-weight:700;font-size:13px;color:{% if r.tipo=='Cobro' %}#16a34a{% else %}#dc2626{% endif %}">
+      {{ "%.2f"|format(r.monto) }}
+    </td>
+    <td style="font-size:12px;color:#64748b">{{ r.banco or r.medio }}</td>
+    <td style="font-size:12px;color:#64748b;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.nota }}</td>
+    <td>
+      <button onclick="toggleEstado({{ r.id }}, '{{ r.estado }}')"
+        style="border:none;cursor:pointer;padding:3px 9px;border-radius:12px;font-size:11px;font-weight:700;
+               background:{% if r.estado=='Procesado' %}#dcfce7{% else %}#fef3c7{% endif %};
+               color:{% if r.estado=='Procesado' %}#166534{% else %}#92400e{% endif %}">
+        {{ r.estado }}
+      </button>
+    </td>
+    <td>
+      <div style="display:flex;gap:4px">
+        <button onclick="abrirEditar({{ r.id }})" class="btn btn-sm btn-outline" title="Editar">✏️</button>
+        <button onclick="eliminar({{ r.id }})" class="btn btn-sm" style="background:#fff5f5;color:#dc2626;border:1px solid #fecaca" title="Eliminar">🗑️</button>
+      </div>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="9" style="text-align:center;color:#94a3b8;padding:28px">Sin registros</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<!-- MODAL EDITAR -->
+<div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:12px;padding:28px;width:500px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.18);position:relative">
+    <div style="font-weight:700;font-size:16px;margin-bottom:18px">✏️ Editar registro</div>
+    <input type="hidden" id="edit-id">
+    <div class="form-row cols2">
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="edit-tipo">
+          <option>Cobro</option><option>Pago</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Fecha</label>
+        <input type="date" id="edit-fecha">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Cliente / Proveedor</label>
+      <input type="text" id="edit-cliente">
+    </div>
+    <div class="form-row cols2">
+      <div class="form-group">
+        <label>Monto</label>
+        <input type="number" step="0.01" id="edit-monto">
+      </div>
+      <div class="form-group">
+        <label>Moneda</label>
+        <select id="edit-moneda"><option>USD</option><option>UYU</option></select>
+      </div>
+    </div>
+    <div class="form-row cols2">
+      <div class="form-group">
+        <label>Medio</label>
+        <select id="edit-medio">
+          <option>Transferencia</option><option>Efectivo</option>
+          <option>Cheque</option><option>Débito</option><option>Crédito</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Banco</label>
+        <input type="text" id="edit-banco">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Estado</label>
+      <select id="edit-estado"><option>Procesado</option><option>Pendiente</option></select>
+    </div>
+    <div class="form-group">
+      <label>Nota</label>
+      <input type="text" id="edit-nota">
+    </div>
+    <div class="form-group">
+      <label>Comprobante</label>
+      <input type="text" id="edit-comp">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <button onclick="guardarEdicion()" class="btn btn-primary">Guardar cambios</button>
+      <button onclick="cerrarModal()" class="btn btn-outline">Cancelar</button>
+      <button onclick="eliminarDesdeModal()" class="btn btn-danger" style="margin-left:auto">🗑️ Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" style="position:fixed;bottom:24px;right:24px;display:none;padding:12px 18px;border-radius:8px;font-size:13px;font-weight:600;z-index:300;box-shadow:0 4px 16px rgba(0,0,0,.15)"></div>
+
+<script>
+let todosRegistros = {};
+// Build cache from server data
+document.querySelectorAll('#tbody-historial tr[data-id]').forEach(tr => {
+  const id = parseInt(tr.dataset.id);
+  const tds = tr.querySelectorAll('td');
+  todosRegistros[id] = {
+    id, fecha: tds[0].textContent.trim(), tipo: tr.dataset.tipo,
+    cliente: tds[2].querySelector('strong')?.textContent.trim() || tds[2].textContent.trim(),
+    moneda: tds[3].textContent.trim(),
+    monto: parseFloat(tds[4].textContent.trim()),
+    banco: tds[5].textContent.trim(),
+    nota: tds[6].textContent.trim(),
+    estado: tr.dataset.estado,
+    comprobante: tds[2].querySelector('a')?.href || ''
+  };
+});
+
+function showToast(msg, error=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  t.style.background = error ? '#fee2e2' : '#dcfce7';
+  t.style.color = error ? '#991b1b' : '#166534';
+  t.style.border = `1px solid ${error ? '#fecaca' : '#86efac'}`;
+  setTimeout(() => t.style.display='none', 3000);
+}
+
+let filtroTipo = '', filtroEstado = '';
+function aplicarFiltros() {
+  const q = document.getElementById('buscador').value.trim().toLowerCase();
+  document.querySelectorAll('#tbody-historial tr[data-id]').forEach(tr => {
+    const matchTipo   = !filtroTipo   || tr.dataset.tipo === filtroTipo;
+    const matchEstado = !filtroEstado || tr.dataset.estado === filtroEstado;
+    const matchQ      = !q || tr.textContent.toLowerCase().includes(q);
+    tr.style.display = (matchTipo && matchEstado && matchQ) ? '' : 'none';
+  });
+}
+
+function filtrar(tipo) {
+  filtroTipo = tipo; filtroEstado = '';
+  ['f-all','f-cobro','f-pago','f-pend'].forEach(id => {
+    document.getElementById(id).className = 'btn btn-sm btn-outline';
+  });
+  const activo = tipo==='' ? 'f-all' : tipo==='Cobro' ? 'f-cobro' : 'f-pago';
+  document.getElementById(activo).className = 'btn btn-sm btn-primary';
+  aplicarFiltros();
+}
+
+function filtrarEstado(est) {
+  filtroEstado = est; filtroTipo = '';
+  ['f-all','f-cobro','f-pago','f-pend'].forEach(id => document.getElementById(id).className = 'btn btn-sm btn-outline');
+  document.getElementById('f-pend').className = 'btn btn-sm btn-primary';
+  aplicarFiltros();
+}
+
+document.getElementById('buscador').addEventListener('input', aplicarFiltros);
+const clearBtn = document.querySelector('.search-clear');
+clearBtn.addEventListener('click', () => { document.getElementById('buscador').value=''; aplicarFiltros(); clearBtn.style.display='none'; });
+document.getElementById('buscador').addEventListener('input', function() { clearBtn.style.display = this.value ? 'block' : 'none'; });
+
+async function toggleEstado(id, estadoActual) {
+  const nuevo = estadoActual === 'Pendiente' ? 'Procesado' : 'Pendiente';
+  try {
+    await fetch(`/api/cobros_pagos/${id}/estado`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({estado:nuevo})
+    });
+    showToast('Estado actualizado');
+    setTimeout(() => location.reload(), 800);
+  } catch(e) { showToast('Error al actualizar', true); }
+}
+
+function abrirEditar(id) {
+  const r = todosRegistros[id];
+  if (!r) return;
+  document.getElementById('edit-id').value      = r.id;
+  document.getElementById('edit-tipo').value    = r.tipo;
+  document.getElementById('edit-fecha').value   = r.fecha;
+  document.getElementById('edit-cliente').value = r.cliente;
+  document.getElementById('edit-monto').value   = r.monto;
+  document.getElementById('edit-moneda').value  = r.moneda;
+  document.getElementById('edit-banco').value   = r.banco;
+  document.getElementById('edit-nota').value    = r.nota;
+  document.getElementById('edit-estado').value  = r.estado;
+  document.getElementById('edit-comp').value    = r.comprobante || '';
+  document.getElementById('modal').style.display = 'flex';
+}
+
+function cerrarModal() { document.getElementById('modal').style.display='none'; }
+
+async function guardarEdicion() {
+  const id = parseInt(document.getElementById('edit-id').value);
+  const payload = {
+    tipo:        document.getElementById('edit-tipo').value,
+    fecha:       document.getElementById('edit-fecha').value,
+    cliente:     document.getElementById('edit-cliente').value.trim(),
+    moneda:      document.getElementById('edit-moneda').value,
+    monto:       parseFloat(document.getElementById('edit-monto').value),
+    medio:       document.getElementById('edit-medio').value,
+    banco:       document.getElementById('edit-banco').value.trim(),
+    estado:      document.getElementById('edit-estado').value,
+    nota:        document.getElementById('edit-nota').value.trim(),
+    comprobante: document.getElementById('edit-comp').value.trim(),
+  };
+  try {
+    await fetch(`/api/cobros_pagos/${id}`, {
+      method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+    });
+    showToast('Registro actualizado');
+    cerrarModal();
+    setTimeout(() => location.reload(), 800);
+  } catch(e) { showToast('Error al guardar', true); }
+}
+
+async function eliminar(id) {
+  if (!confirm('¿Eliminar este registro? Esta acción no se puede deshacer.')) return;
+  await fetch(`/api/cobros_pagos/${id}`, {method:'DELETE'});
+  showToast('Registro eliminado');
+  const tr = document.querySelector(`tr[data-id="${id}"]`);
+  if (tr) tr.remove();
+}
+
+async function eliminarDesdeModal() {
+  const id = parseInt(document.getElementById('edit-id').value);
+  cerrarModal();
+  await eliminar(id);
+}
+
+async function exportarBackup() {
+  const r = await fetch('/api/cobros_pagos/backup');
+  const data = await r.json();
+  const a = document.createElement('a');
+  a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data, null, 2));
+  a.download = `backup_cobros_pagos_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  showToast(`Backup descargado (${data.registros.length} registros)`);
+}
+
+// Cerrar modal al clicar afuera
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) cerrarModal();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Entorno virtual
+venv/
+env/
+.venv/
+
+# Variables de entorno (NUNCA subir)
+.env
+*.env
+!.env.example
+
+# Credenciales Google Drive (NUNCA subir)
+oauth_client.json
+oauth_token.json
+gestion-comprobantes-*.json
+
+# Base de datos (NUNCA subir datos reales)
+*.db
+data/
+tenants/
+!data/.gitkeep
+!tenants/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/

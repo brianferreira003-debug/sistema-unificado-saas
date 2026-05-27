@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Revisar duplicados{% endblock %}
+{% block page_title %}Revisar duplicados{% endblock %}
+{% block content %}
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+  <div>
+    <h1>Revisar duplicados</h1>
+    <div style="font-size:12px;color:var(--text-3);margin-top:2px">Facturas con número o importe repetido para el mismo proveedor</div>
+  </div>
+  <a href="/facturas" class="btn btn-outline btn-sm">Volver a Facturas</a>
+</div>
+
+{% if not duplicados %}
+<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:48px 24px;text-align:center;box-shadow:var(--shadow)">
+  <div style="font-size:32px;margin-bottom:12px;color:var(--green)">✓</div>
+  <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">Sin duplicados detectados</div>
+  <div style="font-size:13px;color:var(--text-3)">No se encontraron facturas repetidas en el sistema.</div>
+</div>
+
+{% else %}
+
+<div class="alert warning" style="margin-bottom:20px">
+  Se encontraron <strong>{{ total }} grupo(s)</strong> de facturas posiblemente duplicadas. Revisá cada grupo y eliminá la que no corresponde.
+</div>
+
+{% for d in duplicados %}
+<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;box-shadow:var(--shadow);overflow:hidden">
+
+  <!-- Encabezado del grupo -->
+  <div style="padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+    {% if d.tipo == 'numero' %}
+      <span style="font-size:11px;font-weight:700;color:var(--red);background:var(--red-bg);padding:2px 8px;border-radius:20px;border:1px solid #f5c6c6">Mismo número</span>
+    {% else %}
+      <span style="font-size:11px;font-weight:700;color:var(--amber);background:var(--amber-bg);padding:2px 8px;border-radius:20px;border:1px solid #f0d89a">Mismo importe · fecha cercana</span>
+    {% endif %}
+    <span style="font-size:12px;color:var(--text-2);font-weight:600">{{ d.grupo[0].proveedor_nombre }}</span>
+    <span style="font-size:11px;color:var(--text-3);margin-left:auto">{{ d.grupo|length }} facturas</span>
+  </div>
+
+  <!-- Tabla del grupo -->
+  <div style="overflow-x:auto">
+  <table style="width:100%;border-collapse:collapse">
+    <thead>
+      <tr>
+        <th style="padding:7px 14px;text-align:left;font-size:10.5px;font-weight:700;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;border-bottom:1px solid var(--border);background:#fafbfc">N° Factura</th>
+        <th style="padding:7px 14px;text-align:left;font-size:10.5px;font-weight:700;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;border-bottom:1px solid var(--border);background:#fafbfc">Fecha</th>
+        <th style="padding:7px 14px;text-align:left;font-size:10.5px;font-weight:700;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;border-bottom:1px solid var(--border);background:#fafbfc">Vencimiento</th>
+        <th style="padding:7px 14px;text-align:right;font-size:10.5px;font-weight:700;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;border-bottom:1px solid var(--border);background:#fafbfc">Importe</th>
+        <th style="padding:7px 14px;text-align:left;font-size:10.5px;font-weight:700;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;border-bottom:1px solid var(--border);background:#fafbfc">Estado</th>
+        <th style="padding:7px 14px;text-align:right;font-size:10.5px;font-weight:700;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;border-bottom:1px solid var(--border);background:#fafbfc">Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for f in d.grupo %}
+    <tr style="border-bottom:1px solid var(--border-soft)">
+      <td style="padding:10px 14px">
+        <span style="font-family:var(--mono);font-size:11.5px;background:#f1f4f9;padding:2px 7px;border-radius:4px;color:var(--text-2)">{{ f.numero }}</span>
+      </td>
+      <td style="padding:10px 14px;font-size:12px;color:var(--text-3);font-family:var(--mono)">{{ f.fecha }}</td>
+      <td style="padding:10px 14px;font-size:12px;color:var(--text-2);font-family:var(--mono)">{{ f.fecha_vencimiento }}</td>
+      <td style="padding:10px 14px;text-align:right;font-weight:700;font-size:13px;font-family:var(--mono)">
+        {{ "%.2f"|format(f.importe) }}
+        <span style="font-size:10.5px;font-weight:500;color:var(--text-3);margin-left:3px">{{ f.moneda }}</span>
+      </td>
+      <td style="padding:10px 14px">
+        {% if f.estado=='pendiente' %}<span class="badge badge-gray">Pendiente</span>
+        {% elif f.estado=='aprobada' %}<span class="badge badge-blue">Aprobada</span>
+        {% elif f.estado=='pagada' %}<span class="badge badge-green">Pagada</span>
+        {% elif f.estado=='pagada_sin_comprobante' %}<span class="badge badge-yellow">S/comp.</span>
+        {% elif f.estado=='en_disputa' %}<span class="badge badge-red">Disputa</span>
+        {% endif %}
+      </td>
+      <td style="padding:10px 14px;text-align:right">
+        {% if f.estado in ('pagada', 'pagada_sin_comprobante') %}
+          <span style="font-size:11px;color:var(--text-3)">Ya pagada</span>
+        {% else %}
+          <form method="post" action="/facturas/{{ f.id }}/eliminar"
+                onsubmit="return confirm('¿Eliminar la factura {{ f.numero }}?')">
+            <button type="submit" class="btn btn-sm"
+              style="background:var(--red-bg);color:var(--red);border:1px solid #f5c6c6;font-size:11.5px">
+              Eliminar
+            </button>
+          </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endfor %}
+
+{% endif %}
+
+{% endblock %}

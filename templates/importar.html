@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Importar Excel{% endblock %}
+{% block content %}
+<div style="max-width:620px">
+<h1>Importar desde Excel</h1>
+
+<div class="card" style="margin-bottom:16px;background:#f0f7ff;border-color:#bfdbfe">
+  <div style="font-weight:700;margin-bottom:6px">¿Cómo funciona?</div>
+  <div style="font-size:13px;color:#444;line-height:1.7">
+    Subí tu planilla <strong>Pago_Proveedores_2026.xlsx</strong> (el archivo que ya usás).<br>
+    El sistema lee todas las facturas automáticamente y las carga. Si una factura ya existe, la omite.<br>
+    Las facturas con <strong>EVO</strong> quedan como <em>Empresa</em>, las de <strong>FEDE</strong> como <em>Personal</em>.
+  </div>
+</div>
+
+<div class="card">
+<form method="post" enctype="multipart/form-data">
+  <div class="form-group">
+    <label>Archivo Excel (.xlsx)</label>
+    <input type="file" name="archivo" accept=".xlsx" required style="padding:6px">
+  </div>
+  <button type="submit" class="btn btn-primary">⬆️ Importar facturas</button>
+</form>
+</div>
+
+{% if resultado %}
+  {% if resultado.error %}
+    <div class="alert-box danger" style="margin-top:16px">{{ resultado.error }}</div>
+  {% else %}
+  <div class="card" style="margin-top:16px">
+    <div style="font-weight:700;font-size:15px;margin-bottom:12px">Resultado de la importación</div>
+
+    <div class="grid4" style="margin-bottom:16px">
+      <div class="stat">
+        <div class="label">Importadas</div>
+        <div class="value" style="color:#166534">{{ resultado.importadas }}</div>
+      </div>
+      <div class="stat">
+        <div class="label">Ya existían (omitidas)</div>
+        <div class="value" style="color:#666">{{ resultado.omitidas }}</div>
+      </div>
+      <div class="stat">
+        <div class="label">Proveedores no encontrados</div>
+        <div class="value {% if resultado.no_encontrados %}red{% endif %}">{{ resultado.no_encontrados|length }}</div>
+      </div>
+      <div class="stat">
+        <div class="label">Errores</div>
+        <div class="value {% if resultado.errores %}red{% endif %}">{{ resultado.errores|length }}</div>
+      </div>
+    </div>
+
+    {% if resultado.no_encontrados %}
+    <div class="alert-box warning">
+      <strong>Proveedores del Excel que no están en el sistema:</strong><br>
+      {% for n in resultado.no_encontrados %}
+        <span class="badge badge-yellow" style="margin:2px">{{ n }}</span>
+      {% endfor %}<br>
+      <span style="font-size:12px;margin-top:6px;display:block">
+        Creá estos proveedores en <a href="/proveedores/nuevo">Nuevo proveedor</a> con el nombre exacto que aparece arriba, y volvé a importar.
+      </span>
+    </div>
+    {% endif %}
+
+    {% if resultado.errores %}
+    <div class="alert-box danger">
+      <strong>Errores:</strong><br>
+      {% for e in resultado.errores %}<div style="font-size:12px">{{ e }}</div>{% endfor %}
+    </div>
+    {% endif %}
+
+    {% if resultado.importadas > 0 %}
+    <a href="/facturas" class="btn btn-primary" style="margin-top:8px">Ver facturas importadas →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+{% endif %}
+</div>
+{% endblock %}

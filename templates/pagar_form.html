@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Registrar pago{% endblock %}
+{% block content %}
+<div style="max-width:560px">
+<h1>Registrar pago</h1>
+
+<div class="card" style="margin-bottom:16px;background:#f0f7ff;border-color:#bfdbfe">
+  <div style="font-size:13px;color:#666;margin-bottom:6px">Factura a pagar</div>
+  <div style="font-size:16px;font-weight:700;color:#1F4E79">{{ factura.proveedor_nombre }}</div>
+  <div style="font-size:13px;margin-top:4px">{{ factura.numero }} —
+    <strong>{{ "%.2f"|format(factura.importe) }} {{ factura.moneda }}</strong>
+  </div>
+  <div style="font-size:12px;color:#666;margin-top:2px">Vencimiento: {{ factura.fecha_vencimiento }}</div>
+</div>
+
+{% if saldo_favor and saldo_favor > 0 %}
+<div class="card" style="margin-bottom:16px;background:#f0fdf4;border-color:#86efac">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+    <span style="font-size:20px">💰</span>
+    <div>
+      <div style="font-weight:700;color:#166534;font-size:14px">Saldo a favor disponible</div>
+      <div style="font-size:13px;color:#166534">
+        {{ factura.proveedor_nombre }} tiene
+        <strong>{{ "%.2f"|format(saldo_favor) }} {{ factura.moneda }}</strong>
+        a favor
+      </div>
+    </div>
+  </div>
+  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#166534">
+    <input type="checkbox" id="usar-saldo" onchange="toggleSaldo()"
+           style="width:16px;height:16px;cursor:pointer">
+    Usar saldo a favor para este pago
+  </label>
+  <div id="info-saldo" style="display:none;margin-top:8px;font-size:12px;color:#4b5563;background:#fff;border-radius:6px;padding:8px 12px;border:1px solid #86efac">
+    {% set neto = factura.importe - saldo_favor %}
+    {% if neto <= 0 %}
+    El saldo cubre el total. <strong>No se necesita transferir dinero.</strong>
+    Quedará un saldo restante de <strong>{{ "%.2f"|format(saldo_favor - factura.importe) }} {{ factura.moneda }}</strong> a favor.
+    {% else %}
+    Se usarán <strong>{{ "%.2f"|format(saldo_favor) }} {{ factura.moneda }}</strong> del saldo.
+    Resta transferir: <strong style="color:#dc2626">{{ "%.2f"|format(neto) }} {{ factura.moneda }}</strong>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+<form method="post">
+  <input type="hidden" name="usar_saldo" id="input-usar-saldo" value="0">
+
+  <div class="form-row cols2">
+    <div class="form-group">
+      <label>Fecha de pago *</label>
+      <input type="date" name="fecha_pago" required value="{{ today }}">
+    </div>
+    <div class="form-group">
+      <label>Importe pagado *</label>
+      <input type="number" step="0.01" name="importe_pagado" id="importe-pagado"
+             required value="{{ factura.importe }}">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Referencia / N° de transacción</label>
+    <input name="referencia" placeholder="Número de transacción, transferencia, cheque, etc.">
+  </div>
+
+  <div class="form-group">
+    <label>Comprobante (link a Drive o nombre de archivo)</label>
+    <input name="comprobante" placeholder="Ej: https://drive.google.com/... o nombre_archivo.pdf">
+  </div>
+
+  <div class="form-group">
+    <label>Nota</label>
+    <textarea name="nota" rows="2" placeholder="Observaciones del pago"></textarea>
+  </div>
+
+  <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+    <button type="submit" name="generar_mail" value="" class="btn btn-success">✅ Confirmar pago</button>
+    <button type="submit" name="generar_mail" value="1" class="btn btn-primary">✅ Confirmar + ✉️ Generar mail</button>
+    <a href="/facturas" class="btn btn-outline">Cancelar</a>
+  </div>
+</form>
+</div>
+</div>
+
+<script>
+const importeTotal = {{ factura.importe }};
+const saldoDisponible = {{ saldo_favor or 0 }};
+
+function toggleSaldo() {
+  const usar = document.getElementById('usar-saldo').checked;
+  document.getElementById('input-usar-saldo').value = usar ? '1' : '0';
+  document.getElementById('info-saldo').style.display = usar ? 'block' : 'none';
+  const neto = Math.max(0, importeTotal - saldoDisponible);
+  document.getElementById('importe-pagado').value = usar ? neto.toFixed(2) : importeTotal.toFixed(2);
+}
+</script>
+{% endblock %}

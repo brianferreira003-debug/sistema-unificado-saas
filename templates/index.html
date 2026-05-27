@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}Inicio — Sistema de Gestión{% endblock %}
+{% block page_title %}Panel de control{% endblock %}
+{% block content %}
+
+<!-- KPIs Proveedores -->
+<div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Proveedores</div>
+<div class="kpi-grid cols4" style="margin-bottom:20px">
+  <div class="kpi">
+    <div class="kpi-accent-bar accent"></div>
+    <div class="kpi-label">Deuda USD</div>
+    <div class="kpi-value accent">$&nbsp;{{ "%.0f"|format(resumen.total_usd) }}</div>
+    <div class="kpi-sub">facturas pendientes</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-accent-bar accent"></div>
+    <div class="kpi-label">Deuda UYU</div>
+    <div class="kpi-value accent">${{ "%.0f"|format(resumen.total_uyu) }}</div>
+    <div class="kpi-sub">facturas pendientes</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-accent-bar {% if resumen.vencidas > 0 %}red{% else %}green{% endif %}"></div>
+    <div class="kpi-label">Vencidas</div>
+    <div class="kpi-value {% if resumen.vencidas > 0 %}red{% else %}green{% endif %}">{{ resumen.vencidas }}</div>
+    <div class="kpi-sub">requieren atención</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-accent-bar {% if resumen.proximas > 0 %}amber{% else %}green{% endif %}"></div>
+    <div class="kpi-label">Vencen en 7 días</div>
+    <div class="kpi-value {% if resumen.proximas > 0 %}amber{% else %}green{% endif %}">{{ resumen.proximas }}</div>
+    <div class="kpi-sub">próximas a vencer</div>
+  </div>
+</div>
+
+<!-- KPIs Cobros y Pagos -->
+<div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Cobros y Pagos — este mes</div>
+<div class="kpi-grid cols3" style="margin-bottom:24px">
+  <div class="kpi">
+    <div class="kpi-accent-bar green"></div>
+    <div class="kpi-label">Cobrado</div>
+    <div class="kpi-value green">${{ "%.0f"|format(resumen.cobros_mes) }}</div>
+    <div class="kpi-sub">ingresos del mes</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-accent-bar red"></div>
+    <div class="kpi-label">Pagado</div>
+    <div class="kpi-value red">${{ "%.0f"|format(resumen.pagos_mes) }}</div>
+    <div class="kpi-sub">egresos del mes</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-accent-bar {% if resumen.cp_pendientes > 0 %}amber{% else %}green{% endif %}"></div>
+    <div class="kpi-label">CP Pendientes</div>
+    <div class="kpi-value {% if resumen.cp_pendientes > 0 %}amber{% else %}green{% endif %}">{{ resumen.cp_pendientes }}</div>
+    <div class="kpi-sub">sin procesar</div>
+  </div>
+</div>
+
+<!-- Tablas -->
+<div class="grid2">
+
+  <!-- Alertas vencimiento -->
+  <div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <h2 style="margin:0">Alertas de vencimiento</h2>
+        {% if alertas %}
+        <span class="badge badge-red">{{ alertas|length }}</span>
+        {% endif %}
+      </div>
+      <a href="/facturas/nueva" class="btn btn-primary btn-sm">+ Nueva</a>
+    </div>
+
+    {% if alertas %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Proveedor</th>
+            <th style="text-align:right">Importe</th>
+            <th>Vto.</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for f in alertas %}
+        {% set dias = f.dias|int %}
+        <tr>
+          <td>
+            <div style="font-weight:600;font-size:12.5px">{{ f.proveedor_nombre }}</div>
+            <div style="font-size:11px;color:var(--text-3);font-family:var(--mono)">{{ f.numero }}</div>
+          </td>
+          <td style="text-align:right;font-family:var(--mono);font-size:12.5px;font-weight:600">
+            {{ "%.2f"|format(f.importe) }}
+            <span class="{% if f.moneda=='USD' %}moneda-usd{% else %}moneda-uyu{% endif %}" style="font-size:10px">{{ f.moneda }}</span>
+          </td>
+          <td>
+            <div style="font-size:11.5px;color:var(--text-2)">{{ f.fecha_vencimiento }}</div>
+            {% if dias < 0 %}<span class="badge badge-red" style="margin-top:2px">{{ dias|abs }}d venc.</span>
+            {% elif dias == 0 %}<span class="badge badge-red" style="margin-top:2px">HOY</span>
+            {% else %}<span class="badge badge-yellow" style="margin-top:2px">{{ dias }}d</span>{% endif %}
+          </td>
+          <td style="text-align:right">
+            <a href="/facturas/{{ f.id }}/pagar" class="btn btn-success btn-xs">Pagar</a>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="alert success" style="margin:0">✓ Sin facturas por vencer en los próximos 7 días</div>
+    {% endif %}
+
+    <div style="margin-top:10px;display:flex;gap:7px">
+      <a href="/informe" class="btn btn-outline btn-sm">📊 Informe completo</a>
+      <a href="/informe/exportar" class="btn btn-outline btn-sm">⬇️ Excel</a>
+    </div>
+  </div>
+
+  <!-- Últimos movimientos -->
+  <div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <h2 style="margin:0">Últimos movimientos</h2>
+      <a href="/cobros-pagos" class="btn btn-primary btn-sm">+ Nuevo</a>
+    </div>
+
+    {% if cp_recientes %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Tipo</th>
+            <th>Cliente</th>
+            <th style="text-align:right">Monto</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for r in cp_recientes %}
+        <tr>
+          <td style="font-size:11.5px;color:var(--text-3);font-family:var(--mono)">{{ r.fecha }}</td>
+          <td>
+            {% if r.tipo=='Cobro' %}<span class="badge badge-green">Cobro</span>
+            {% else %}<span class="badge badge-orange">Pago</span>{% endif %}
+          </td>
+          <td style="font-weight:500;font-size:12.5px">{{ r.cliente }}</td>
+          <td style="text-align:right;font-family:var(--mono);font-size:12.5px;font-weight:600">
+            <span class="{% if r.moneda=='USD' %}moneda-usd{% else %}moneda-uyu{% endif %}">{{ r.moneda }}</span>
+            {{ "%.2f"|format(r.monto) }}
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="alert info" style="margin:0">Sin movimientos registrados aún.</div>
+    {% endif %}
+
+    <div style="margin-top:10px">
+      <a href="/cobros-pagos/historial" class="btn btn-outline btn-sm">Ver historial →</a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
