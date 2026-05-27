@@ -1,71 +1,68 @@
 {% extends "base.html" %}
 {% block title %}Editar pago{% endblock %}
+{% block page_title %}Editar pago{% endblock %}
 {% block content %}
-<div style="max-width:600px">
-<div class="top-actions">
-  <h1>✏️ Editar pago</h1>
-  <a href="/pagos" class="btn btn-outline">← Volver a pagos</a>
-</div>
 
-<div class="alert-box info" style="margin-bottom:20px">
-  Editando pago de <strong>{{ pago.proveedor_nombre }}</strong> —
-  Factura <strong>{{ pago.factura_numero }}</strong>
-  (importe original: <strong>{{ "%.2f"|format(pago.factura_importe) }} {{ pago.moneda }}</strong>)
-</div>
+<div style="max-width:600px;margin:0 auto">
 
-<div class="card">
-<form method="post">
-  <div class="form-row cols2">
-    <div class="form-group">
-      <label>Fecha de pago *</label>
-      <input type="date" name="fecha_pago" value="{{ pago.fecha_pago }}" required>
-    </div>
-    <div class="form-group">
-      <label>Importe pagado *</label>
-      <input type="number" name="importe_pagado" step="0.01"
-             value="{{ pago.importe_pagado }}" required>
-      <div style="font-size:11px;color:#94a3b8;margin-top:3px">
-        Importe original de la factura: {{ "%.2f"|format(pago.factura_importe) }}
+  <div class="alert alert-info" style="margin-bottom:16px">
+    Editando pago de <strong>{{ pago.proveedor_nombre }}</strong> —
+    Factura <strong>{{ pago.factura_numero }}</strong>
+    (importe original: <strong>{{ "%.2f"|format(pago.factura_importe) }} {{ pago.moneda }}</strong>)
+  </div>
+
+  <div class="card">
+  <form method="post">
+    <div class="form-row cols2">
+      <div class="form-group">
+        <label>Fecha de pago *</label>
+        <input type="date" name="fecha_pago" value="{{ pago.fecha_pago }}" required>
+      </div>
+      <div class="form-group">
+        <label>Importe pagado *</label>
+        <input type="number" name="importe_pagado" step="0.01"
+               value="{{ pago.importe_pagado }}" required
+               style="font-size:18px;font-weight:700;font-family:var(--mono)">
+        <div class="form-hint">Importe original de la factura: {{ "%.2f"|format(pago.factura_importe) }}</div>
       </div>
     </div>
-  </div>
 
-  <div class="form-group">
-    <label>Referencia / N° transferencia</label>
-    <input type="text" name="referencia" value="{{ pago.referencia or '' }}"
-           placeholder="Número de operación, referencia, etc.">
-  </div>
+    <div class="form-group">
+      <label>Referencia / N° transferencia</label>
+      <input type="text" name="referencia" value="{{ pago.referencia or '' }}"
+             placeholder="Número de operación, referencia, etc.">
+    </div>
 
-  <div class="form-group">
-    <label>Comprobante (link de Drive)</label>
-    <input type="url" name="comprobante" value="{{ pago.comprobante or '' }}"
-           placeholder="https://drive.google.com/...">
-  </div>
+    <div class="form-group">
+      <label>Comprobante (link de Drive)</label>
+      <input type="url" name="comprobante" value="{{ pago.comprobante or '' }}"
+             placeholder="https://drive.google.com/...">
+    </div>
 
-  <div class="form-group">
-    <label>Nota</label>
-    <textarea name="nota" rows="2">{{ pago.nota or '' }}</textarea>
-  </div>
+    <div class="form-group">
+      <label>Nota</label>
+      <textarea name="nota" rows="2">{{ pago.nota or '' }}</textarea>
+    </div>
 
-  <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
-    <button type="submit" class="btn btn-primary">💾 Guardar cambios</button>
-    <a href="/pagos" class="btn btn-outline">Cancelar</a>
-  </div>
-</form>
-</div>
-
-<!-- Revertir pago -->
-<div class="card" style="margin-top:16px;border-color:#fecaca;background:#fff5f5">
-  <div style="font-weight:700;color:#991b1b;margin-bottom:8px">⚠️ Zona de peligro</div>
-  <p style="font-size:13px;color:#7f1d1d;margin-bottom:14px">
-    Revertir este pago eliminará el registro y devolverá la factura
-    <strong>{{ pago.factura_numero }}</strong> al estado <strong>Pendiente</strong>.
-    Esto no se puede deshacer.
-  </p>
-  <form method="post" action="/pagos/{{ pago.id }}/revertir"
-        onsubmit="return confirm('¿Seguro que querés revertir este pago? La factura volverá a Pendiente.')">
-    <button type="submit" class="btn btn-danger">↩️ Revertir pago y volver a Pendiente</button>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button type="submit" class="btn btn-primary" style="flex:1;min-height:48px">💾 Guardar cambios</button>
+      <a href="/pagos" class="btn btn-outline" style="min-height:48px;display:flex;align-items:center">Cancelar</a>
+    </div>
   </form>
-</div>
+  </div>
+
+  <!-- Revertir pago -->
+  <div class="card" style="margin-top:16px;border-color:#fecaca;background:#fff5f5">
+    <div style="font-weight:700;color:#991b1b;margin-bottom:8px">⚠️ Zona de peligro</div>
+    <p style="font-size:13px;color:#7f1d1d;margin-bottom:14px">
+      Revertir este pago eliminará el registro y devolverá la factura
+      <strong>{{ pago.factura_numero }}</strong> al estado <strong>Pendiente</strong>.
+      Esto no se puede deshacer.
+    </p>
+    <form method="post" action="/pagos/{{ pago.id }}/revertir"
+          onsubmit="return confirm('¿Seguro que querés revertir este pago? La factura volverá a Pendiente.')">
+      <button type="submit" class="btn btn-danger btn-block" style="min-height:44px">↩️ Revertir pago y volver a Pendiente</button>
+    </form>
+  </div>
 </div>
 {% endblock %}

@@ -74,27 +74,49 @@ Opción 2: Railway.app
 - CORS eliminado
 - Credenciales en .env (no en código)
 - .gitignore para tokens y DBs
-- Passwords hasheadas (SHA-256)
+- Passwords hasheadas (SHA-256) — **Pendiente migrar a bcrypt**
 - Aislamiento de datos por empresa
 
+### Rediseño Mobile-First v3.1 (2025-05-27)
+**Cambios principales:**
+- Layout mobile-first real (no desktop comprimido)
+- Bottom navigation bar (5 secciones: Inicio, Cobros, Facturas, Pagos, Más)
+- Header compacto 52px con logo + título centrado
+- Inputs mínimo 48px alto, 16px font-size (evita zoom iOS)
+- Botones mínimo 44px alto (área táctil)
+- Cards con border-radius 14-18px, sombras suaves
+- Segmented control iOS-style (Cobro/Pago)
+- Tablas reemplazadas por cards en móvil (historial, facturas, proveedores)
+- FAB (+) para registro rápido de cobros/pagos
+- Dropzone completo → compacto (botón simple)
+- Nombre sugerido Drive → acordeón colapsable
+- Últimos registros → acordeón colapsable
+- Modales → bottom sheet en móvil
+- "Más" menú overlay con backdrop (informes, sistema, config)
+- Sidebar desktop se mantiene intacta (>768px)
+- Diseño system: Inter + JetBrains Mono
+- Colores: verde oscuro #1C3829 como accent, superficies blancas
+
+**Templates actualizados:**
+- base.html → Layout completo mobile-first
+- index.html → Dashboard con KPIs en grids de 2, secciones apiladas
+- cobros_registrar.html → Segmented control, dropzone compacto, acordeones
+- cobros_historial.html → Cards en móvil + tabla desktop
+- facturas.html → Cards en móvil + tabla desktop
+- proveedores.html → Cards con grid de datos
+- informe.html → Cards apilados, resumen en grid
+- login.html → Centrado, limpio, sin bottom nav
+- factura_form.html → Campos full-width en móvil
+- proveedor_form.html → Secciones claras, una columna
+- pagar_form.html → Botones full-width apilados
+- editar_pago.html → Layout limpio
+
 ### Pendientes
-- [ ] Login con Google
-- [ ] HTTPS (lo da el hosting)
-- [ ] Rate limiting
-- [ ] Recover password por email
-- [ ] Auditoría (log de acciones)
-- [ ] Mejorar hash (bcrypt en vez de SHA-256)
-
-### Changelog
-v3.0 - 2026-05-26 - Refactor SaaS completo:
-  - Añadido Flask-Login
-  - Multitenant con DB por empresa
-  - Panel de admin
-  - .env para credenciales
-  - Eliminado CORS abierto
-  - Templates actualizados con info de usuario
-  - Fix: línea duplicada en confirmar_estado_cuenta
-  - Fix: bug de /api/buscar que no existía
-  - Fix: route /cobros-pagos duplicada que renderizaba con params erróneos
-
-v2.0 - Sistema unificado original (Monolítico, sin login)
+- [ ] Migrar hashing de passwords a bcrypt/scrypt
+- [ ] Agregar rate limiting en login
+- [ ] CSRF protection (Flask-WTF)
+- [ ] Deploy en Render/Railway
+- [ ] Cambiar credenciales por defecto de admin
+- [ ] Agregar tests
+- [ ] PWA manifest (instalable como app)
+- [ ] Notificaciones push (opcional)

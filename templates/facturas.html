@@ -6,231 +6,198 @@
 {% if request.args.get('error_eliminar') %}
 {% set fid_err = request.args.get('error_eliminar') %}
 {% set n_pagos = request.args.get('pagos') %}
-<div class="alert warning" id="alerta-eliminar" style="margin-bottom:16px">
-  <div>
-    <strong>⚠️ Esta factura tiene {{ n_pagos }} pago(s) registrado(s).</strong>
-    Si la eliminás también se borrarán esos registros. ¿Estás seguro?
-    <div style="margin-top:8px;display:flex;gap:8px">
-      <form method="post" action="/facturas/{{ fid_err }}/eliminar" style="display:inline">
-        <input type="hidden" name="forzar" value="1">
-        <button type="submit" class="btn btn-danger btn-sm">Sí, eliminar con sus pagos</button>
-      </form>
-      <button onclick="document.getElementById('alerta-eliminar').style.display='none'"
-              class="btn btn-outline btn-sm">Cancelar</button>
-    </div>
+<div class="alert alert-warning" id="alerta-eliminar">
+  <strong>⚠️ Esta factura tiene {{ n_pagos }} pago(s) registrado(s).</strong>
+  Si la eliminás también se borrarán esos registros.
+  <div style="margin-top:10px;display:flex;gap:8px">
+    <form method="post" action="/facturas/{{ fid_err }}/eliminar" style="display:inline">
+      <input type="hidden" name="forzar" value="1">
+      <button type="submit" class="btn btn-danger btn-sm">Sí, eliminar con sus pagos</button>
+    </form>
+    <button onclick="document.getElementById('alerta-eliminar').style.display='none'" class="btn btn-outline btn-sm">Cancelar</button>
   </div>
 </div>
 {% endif %}
 
-<!-- Header -->
+<!-- ═══ HEADER ═══ -->
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
   <div>
-    <h1>Facturas</h1>
-    <div style="font-size:12px;color:var(--text-3);margin-top:2px">Gestión de facturas de proveedores</div>
+    <h1 style="margin-bottom:2px">Facturas</h1>
+    <p class="page-subtitle" style="margin-bottom:0">Gestión de facturas de proveedores</p>
   </div>
-  <div style="display:flex;gap:8px;align-items:center">
-    <a href="/facturas/duplicados" class="btn btn-outline btn-sm">Revisar duplicados</a>
-    <a href="/facturas/nueva" class="btn btn-primary">+ Nueva factura</a>
-  </div>
+  <a href="/facturas/nueva" class="btn btn-primary btn-sm" style="min-height:40px">+ Nueva</a>
 </div>
 
-<!-- Toolbar de filtros -->
-<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;box-shadow:var(--shadow)">
+<!-- ═══ FILTROS — Desktop collapsible, mobile scroll ═══ -->
+<div class="card" style="padding:12px;margin-bottom:14px">
   <form method="get" id="form-filtros">
-    <div style="display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap">
-
-      <div class="filter-group">
-        <span class="filter-label">Estado</span>
-        <select name="estado" class="filter-select" onchange="this.form.submit()">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+      <div style="min-width:120px;flex:1">
+        <label class="filter-label" style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;display:block">Estado</label>
+        <select name="estado" class="filter-select" onchange="this.form.submit()" style="height:40px;font-size:14px;padding:0 10px;border:1.5px solid var(--border);border-radius:var(--radius-xs);width:100%;background:var(--surface)">
           <option value="pendiente" {% if estado_filtro=='pendiente' %}selected{% endif %}>Pendientes</option>
-          <option value="aprobada"  {% if estado_filtro=='aprobada'  %}selected{% endif %}>Aprobadas</option>
-          <option value="pagada"    {% if estado_filtro=='pagada'    %}selected{% endif %}>Pagadas</option>
-          <option value="en_disputa"{% if estado_filtro=='en_disputa'%}selected{% endif %}>En disputa</option>
-          <option value=""          {% if estado_filtro==''          %}selected{% endif %}>Todas</option>
+          <option value="aprobada" {% if estado_filtro=='aprobada' %}selected{% endif %}>Aprobadas</option>
+          <option value="pagada" {% if estado_filtro=='pagada' %}selected{% endif %}>Pagadas</option>
+          <option value="" {% if estado_filtro=='' %}selected{% endif %}>Todas</option>
         </select>
       </div>
-
-      <div class="filter-group">
-        <span class="filter-label">Proveedor</span>
-        <select name="proveedor_id" class="filter-select" style="min-width:160px" onchange="this.form.submit()">
+      <div style="min-width:140px;flex:1">
+        <label style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;display:block">Proveedor</label>
+        <select name="proveedor_id" class="filter-select" onchange="this.form.submit()" style="height:40px;font-size:14px;padding:0 10px;border:1.5px solid var(--border);border-radius:var(--radius-xs);width:100%;background:var(--surface)">
           <option value="">Todos</option>
           {% for p in proveedores %}
           <option value="{{ p.id }}" {% if proveedor_filtro==p.id|string %}selected{% endif %}>{{ p.nombre }}</option>
           {% endfor %}
         </select>
       </div>
-
-      <div class="filter-group">
-        <span class="filter-label">Destino</span>
-        <select name="destino" class="filter-select" onchange="this.form.submit()">
+      <div style="min-width:100px;flex:1">
+        <label style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;display:block">Destino</label>
+        <select name="destino" class="filter-select" onchange="this.form.submit()" style="height:40px;font-size:14px;padding:0 10px;border:1.5px solid var(--border);border-radius:var(--radius-xs);width:100%;background:var(--surface)">
           <option value="" {% if destino_filtro=='' %}selected{% endif %}>Todos</option>
-          <option value="EVO"  {% if destino_filtro=='EVO'  %}selected{% endif %}>EVO</option>
+          <option value="EVO" {% if destino_filtro=='EVO' %}selected{% endif %}>EVO</option>
           <option value="FEDE" {% if destino_filtro=='FEDE' %}selected{% endif %}>FEDE</option>
         </select>
       </div>
-
-      <div style="width:1px;height:24px;background:var(--border);margin:0 2px;align-self:center"></div>
-
-      <div class="filter-group">
-        <span class="filter-label">Fecha por</span>
-        <select name="tipo_fecha" class="filter-select" onchange="this.form.submit()">
-          <option value="emision"     {% if tipo_fecha_filtro=='emision'     %}selected{% endif %}>Emisión</option>
-          <option value="vencimiento" {% if tipo_fecha_filtro=='vencimiento' %}selected{% endif %}>Vencimiento</option>
-        </select>
-      </div>
-
-      <div class="filter-group">
-        <span class="filter-label">Desde</span>
-        <input type="date" name="fecha_desde" value="{{ fecha_desde_filtro }}"
-               class="filter-input" style="width:136px" onchange="this.form.submit()">
-      </div>
-
-      <div class="filter-group">
-        <span class="filter-label">Hasta</span>
-        <input type="date" name="fecha_hasta" value="{{ fecha_hasta_filtro }}"
-               class="filter-input" style="width:136px" onchange="this.form.submit()">
-      </div>
-
-      <a href="/facturas" class="btn btn-outline btn-sm" style="margin-bottom:0;align-self:flex-end;color:var(--text-2)">Limpiar</a>
+      <a href="/facturas" class="btn btn-outline btn-sm" style="min-height:40px;display:flex;align-items:center">Limpiar</a>
     </div>
   </form>
 </div>
 
-<!-- Info bar -->
+<!-- ═══ INFO BAR ═══ -->
 <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-  <div style="font-size:12px;color:var(--text-3)">
-    <strong style="color:var(--text)">{{ facturas|length }}</strong> factura(s)
-  </div>
+  <span style="font-size:13px;color:var(--text-3)"><strong style="color:var(--text)">{{ facturas|length }}</strong> factura(s)</span>
   {% if fecha_desde_filtro or fecha_hasta_filtro %}
-  <span class="active-filter-tag">
-    📅 {{ 'Emisión' if tipo_fecha_filtro == 'emision' else 'Vencimiento' }}
+  <span class="badge badge-blue">📅 {{ 'Emisión' if tipo_fecha_filtro == 'emision' else 'Vencimiento' }}
     {% if fecha_desde_filtro %} desde {{ fecha_desde_filtro }}{% endif %}
     {% if fecha_hasta_filtro %} hasta {{ fecha_hasta_filtro }}{% endif %}
   </span>
   {% endif %}
-  <span id="buscar-facturas-count" style="font-size:11.5px;color:var(--text-3);margin-left:auto"></span>
+  <span id="buscar-facturas-count" style="font-size:12px;color:var(--text-3);margin-left:auto"></span>
 </div>
 
-<!-- Buscador grande -->
-<div style="position:relative;margin-bottom:14px">
-  <svg style="position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text-3)" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-  <input type="text" id="buscar-facturas" placeholder="Buscar por proveedor, número de factura, importe, estado..." autocomplete="off"
-    style="width:100%;height:44px;padding:0 40px 0 42px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;font-family:var(--font);background:var(--card);color:var(--text);transition:border-color .15s,box-shadow .15s;box-shadow:var(--shadow)">
-  <button id="buscar-facturas-clear" onclick="document.getElementById('buscar-facturas').value='';document.getElementById('buscar-facturas').dispatchEvent(new Event('input'));this.style.display='none';document.getElementById('buscar-facturas').focus()"
-    style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-3);font-size:16px;display:none;padding:2px 4px;line-height:1">✕</button>
+<!-- ═══ BUSCADOR ═══ -->
+<div class="search-wrap">
+  <span class="search-icon">🔍</span>
+  <input type="text" id="buscar-facturas" placeholder="Buscar por proveedor, número, importe...">
+  <button class="search-clear">✕</button>
 </div>
 
 {% if not facturas %}
-<div class="alert info">No hay facturas con los filtros seleccionados.</div>
+<div class="empty-state">
+  <div class="empty-state-icon">📭</div>
+  <div class="empty-state-text">No hay facturas con los filtros seleccionados</div>
+</div>
 {% else %}
 
-<div class="table-wrap">
+<!-- ═══ MOBILE CARDS ═══ -->
+<div class="mobile-card-list" id="mobile-facturas-list">
+{% for f in facturas %}
+{% set dias = f.dias|int if f.dias is not none else 0 %}
+{% set desc = (f.descuento or 0)|float %}
+<div class="mobile-card" style="{% if f.estado in ('pendiente','aprobada') and dias < 0 %}border-color:#fecaca{% elif f.estado in ('pendiente','aprobada') and dias <= 3 %}border-color:#fcd34d{% endif %}">
+  <div class="mobile-card-header">
+    <div>
+      <div class="mobile-card-title">{{ f.proveedor_nombre }}</div>
+      <div class="mobile-card-sub" style="font-family:var(--mono)">{{ f.numero }}</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-family:var(--mono);font-weight:700;font-size:16px">{{ "%.2f"|format(f.importe) }}
+        <span class="{% if f.moneda=='USD' %}moneda-usd{% else %}moneda-uyu{% endif %}" style="font-size:11px">{{ f.moneda }}</span>
+      </div>
+      {% if desc > 0 %}
+      <div style="font-size:11px;color:var(--red);margin-top:2px">-{{ desc|int }}% desc.</div>
+      {% endif %}
+    </div>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+    <span style="font-size:11px;color:var(--text-3)">{{ f.fecha }}</span>
+    <span style="font-size:11px;color:var(--text-3)">→</span>
+    <span style="font-size:11px;font-family:var(--mono)">{{ f.fecha_vencimiento }}</span>
+    {% if f.estado in ('pendiente','aprobada') %}
+      {% if dias < 0 %}<span class="badge badge-red" style="font-size:10px">{{ dias|abs }}d venc.</span>
+      {% elif dias == 0 %}<span class="badge badge-red" style="font-size:10px">HOY</span>
+      {% elif dias <= 7 %}<span class="badge badge-yellow" style="font-size:10px">{{ dias }}d</span>
+      {% endif %}
+    {% endif %}
+    {% set dst = f.destino or '' %}
+    {% if dst == 'EVO' %}<span class="badge" style="background:#eff6ff;color:#1d4ed8;font-size:10px">EVO</span>
+    {% elif dst == 'FEDE' %}<span class="badge" style="background:#f5f3ff;color:#7c3aed;font-size:10px">FEDE</span>{% endif %}
+    {% if f.estado=='pendiente' %}<span class="badge badge-gray" style="font-size:10px">Pendiente</span>
+    {% elif f.estado=='aprobada' %}<span class="badge badge-blue" style="font-size:10px">Aprobada</span>
+    {% elif f.estado=='pagada' %}<span class="badge badge-green" style="font-size:10px">Pagada</span>
+    {% elif f.estado=='en_disputa' %}<span class="badge badge-red" style="font-size:10px">Disputa</span>{% endif %}
+  </div>
+  <div class="mobile-card-actions">
+    {% if f.estado in ('pendiente','aprobada') %}
+    <a href="/facturas/{{ f.id }}/pagar" class="btn btn-success btn-sm" style="flex:1">Pagar</a>
+    {% endif %}
+    <div class="dropdown">
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="toggleDropdown('dd-{{ f.id }}')">⋯</button>
+      <div class="dropdown-menu" id="dd-{{ f.id }}">
+        {% if f.estado == 'pendiente' %}
+        <form method="post" action="/facturas/{{ f.id }}/estado"><input type="hidden" name="estado" value="aprobada"><button type="submit" class="dropdown-item">Marcar aprobada</button></form>
+        <form method="post" action="/facturas/{{ f.id }}/estado"><input type="hidden" name="estado" value="en_disputa"><button type="submit" class="dropdown-item">Marcar en disputa</button></form>
+        {% endif %}
+        {% if f.estado in ('en_disputa','pagada_sin_comprobante') %}
+        <form method="post" action="/facturas/{{ f.id }}/estado"><input type="hidden" name="estado" value="pendiente"><button type="submit" class="dropdown-item">Reactivar</button></form>
+        {% endif %}
+        <div class="dropdown-divider"></div>
+        <form method="post" action="/facturas/{{ f.id }}/eliminar" onsubmit="return confirm('¿Eliminar factura #{{ f.numero }}?')">
+          <button type="submit" class="dropdown-item danger">Eliminar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+</div>
+
+<!-- ═══ TABLA DESKTOP (hidden mobile) ═══ -->
+<div class="table-wrap" style="display:none">
 <table>
-  <thead>
-    <tr>
-      <th>Proveedor</th>
-      <th>N° Factura</th>
-      <th>Emisión</th>
-      <th>Vencimiento</th>
-      <th style="text-align:right">Importe</th>
-      <th>Mon.</th>
-      <th>Destino</th>
-      <th>Estado</th>
-      <th style="text-align:right;width:60px">Acc.</th>
-    </tr>
-  </thead>
+  <thead><tr>
+    <th>Proveedor</th><th>N° Factura</th><th>Emisión</th><th>Vencimiento</th>
+    <th style="text-align:right">Importe</th><th>Mon.</th><th>Destino</th><th>Estado</th><th></th>
+  </tr></thead>
   <tbody id="tbody-facturas">
   {% for f in facturas %}
   {% set dias = f.dias|int if f.dias is not none else 0 %}
   {% set desc = (f.descuento or 0)|float %}
   <tr style="{% if f.estado in ('pendiente','aprobada') and dias < 0 %}background:#fff8f8{% elif f.estado in ('pendiente','aprobada') and dias <= 3 %}background:#fffdf0{% endif %}">
-
-    <td>
-      <div style="font-weight:600;font-size:12.5px;color:var(--text)">{{ f.proveedor_nombre }}</div>
-      {% if f.nota %}<div style="font-size:11px;color:var(--text-3);margin-top:1px">{{ f.nota }}</div>{% endif %}
-    </td>
-
-    <td>
-      <span style="font-family:var(--mono);font-size:11.5px;background:#f1f4f9;padding:2px 7px;border-radius:4px;color:var(--text-2)">{{ f.numero }}</span>
-    </td>
-
+    <td><strong>{{ f.proveedor_nombre }}</strong>{% if f.nota %}<br><span style="font-size:11px;color:var(--text-3)">{{ f.nota }}</span>{% endif %}</td>
+    <td><span style="font-family:var(--mono);font-size:12px;background:#f1f4f9;padding:2px 7px;border-radius:4px;color:var(--text-2)">{{ f.numero }}</span></td>
     <td style="font-size:12px;color:var(--text-3);font-family:var(--mono)">{{ f.fecha }}</td>
-
     <td>
       <div style="font-size:12px;color:var(--text-2);font-family:var(--mono)">{{ f.fecha_vencimiento }}</div>
       {% if f.estado in ('pendiente','aprobada') %}
-        {% if dias < 0 %}<span class="badge badge-red" style="margin-top:2px;display:inline-flex">{{ dias|abs }}d venc.</span>
-        {% elif dias == 0 %}<span class="badge badge-red" style="margin-top:2px;display:inline-flex">HOY</span>
-        {% elif dias <= 7 %}<span class="badge badge-yellow" style="margin-top:2px;display:inline-flex">{{ dias }}d</span>
+        {% if dias < 0 %}<span class="badge badge-red" style="margin-top:2px">{{ dias|abs }}d venc.</span>
+        {% elif dias == 0 %}<span class="badge badge-red" style="margin-top:2px">HOY</span>
+        {% elif dias <= 7 %}<span class="badge badge-yellow" style="margin-top:2px">{{ dias }}d</span>
         {% endif %}
       {% endif %}
     </td>
-
     <td style="text-align:right">
       <div style="font-weight:700;font-size:13px;font-family:var(--mono)">{{ "%.2f"|format(f.importe) }}</div>
-      {% if desc > 0 %}
-      <div style="font-size:10.5px;color:var(--red)">-{{ desc|int }}%</div>
-      <div style="font-size:11px;color:var(--green);font-weight:600;font-family:var(--mono)">{{ "%.2f"|format(f.importe * (1 - desc/100)) }}</div>
-      {% endif %}
+      {% if desc > 0 %}<div style="font-size:10.5px;color:var(--red)">-{{ desc|int }}%</div>
+      <div style="font-size:11px;color:var(--green);font-weight:600;font-family:var(--mono)">{{ "%.2f"|format(f.importe * (1 - desc/100)) }}</div>{% endif %}
     </td>
-
-    <td>
-      <span class="{% if f.moneda=='USD' %}moneda-usd{% else %}moneda-uyu{% endif %}" style="font-size:11.5px">{{ f.moneda }}</span>
-    </td>
-
-    <td>
-      {% set dst = f.destino or f.cheque_id or '' %}
-      {% if dst == 'EVO' %}<span class="tag-evo">EVO</span>
-      {% elif dst == 'FEDE' %}<span class="tag-fede">FEDE</span>
-      {% elif dst %}<span class="badge badge-gray" style="font-size:10px">{{ dst }}</span>
-      {% else %}<span style="color:var(--border);font-size:13px">—</span>{% endif %}
-    </td>
-
-    <td>
-      {% if f.estado=='pendiente' %}<span class="badge badge-gray">Pendiente</span>
-      {% elif f.estado=='aprobada' %}<span class="badge badge-blue">Aprobada</span>
-      {% elif f.estado=='pagada' %}<span class="badge badge-green">Pagada</span>
-      {% elif f.estado=='pagada_sin_comprobante' %}<span class="badge badge-yellow">S/comp.</span>
-      {% elif f.estado=='en_disputa' %}<span class="badge badge-red">Disputa</span>
-      {% endif %}
-    </td>
-
-    <!-- Acciones: botón pagar + dropdown -->
+    <td><span class="{% if f.moneda=='USD' %}moneda-usd{% else %}moneda-uyu{% endif %}" style="font-size:12px">{{ f.moneda }}</span></td>
+    <td>{% set dst = f.destino or '' %}{% if dst == 'EVO' %}<span class="badge" style="background:#eff6ff;color:#1d4ed8">EVO</span>{% elif dst == 'FEDE' %}<span class="badge" style="background:#f5f3ff;color:#7c3aed">FEDE</span>{% elif dst %}<span class="badge badge-gray">{{ dst }}</span>{% else %}—{% endif %}</td>
+    <td>{% if f.estado=='pendiente' %}<span class="badge badge-gray">Pendiente</span>
+    {% elif f.estado=='aprobada' %}<span class="badge badge-blue">Aprobada</span>
+    {% elif f.estado=='pagada' %}<span class="badge badge-green">Pagada</span>
+    {% elif f.estado=='en_disputa' %}<span class="badge badge-red">Disputa</span>{% endif %}</td>
     <td style="text-align:right">
-      <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px">
-        {% if f.estado in ('pendiente','aprobada') %}
-          <a href="/facturas/{{ f.id }}/pagar" class="btn btn-success btn-xs">Pagar</a>
-        {% endif %}
-
+      <div style="display:flex;gap:4px;justify-content:flex-end">
+        {% if f.estado in ('pendiente','aprobada') %}<a href="/facturas/{{ f.id }}/pagar" class="btn btn-success btn-xs">Pagar</a>{% endif %}
         <div class="dropdown">
-          <button class="btn btn-ghost btn-xs btn-icon" onclick="toggleDropdown('dd-{{ f.id }}')"
-                  style="font-size:14px;padding:3px 6px">⋯</button>
+          <button class="btn btn-ghost btn-xs btn-icon" onclick="toggleDropdown('dd-{{ f.id }}')">⋯</button>
           <div class="dropdown-menu" id="dd-{{ f.id }}">
             {% if f.estado == 'pendiente' %}
-            <form method="post" action="/facturas/{{ f.id }}/estado">
-              <input type="hidden" name="estado" value="aprobada">
-              <button type="submit" class="dropdown-item">Marcar aprobada</button>
-            </form>
-            <form method="post" action="/facturas/{{ f.id }}/estado">
-              <input type="hidden" name="estado" value="en_disputa">
-              <button type="submit" class="dropdown-item">Marcar en disputa</button>
-            </form>
-            <form method="post" action="/facturas/{{ f.id }}/estado">
-              <input type="hidden" name="estado" value="pagada_sin_comprobante">
-              <button type="submit" class="dropdown-item">Pagada s/comprobante</button>
-            </form>
-            {% endif %}
-            {% if f.estado in ('en_disputa','pagada_sin_comprobante') %}
-            <form method="post" action="/facturas/{{ f.id }}/estado">
-              <input type="hidden" name="estado" value="pendiente">
-              <button type="submit" class="dropdown-item">Reactivar</button>
-            </form>
+            <form method="post" action="/facturas/{{ f.id }}/estado"><input type="hidden" name="estado" value="aprobada"><button type="submit" class="dropdown-item">Marcar aprobada</button></form>
             {% endif %}
             <div class="dropdown-divider"></div>
-            <form method="post" action="/facturas/{{ f.id }}/eliminar"
-                  onsubmit="return confirmarEliminar('{{ f.numero }}', '{{ f.estado }}')">
-              <button type="submit" class="dropdown-item danger">Eliminar</button>
-            </form>
+            <form method="post" action="/facturas/{{ f.id }}/eliminar"><button type="submit" class="dropdown-item danger">Eliminar</button></form>
           </div>
         </div>
       </div>
@@ -243,31 +210,6 @@
 {% endif %}
 
 <script>
-initBuscador('buscar-facturas','#tbody-facturas tr');
-
-// Estilo focus verde en el buscador grande
-const inputBuscar = document.getElementById('buscar-facturas');
-const clearBtn = document.getElementById('buscar-facturas-clear');
-inputBuscar.addEventListener('focus', () => {
-  inputBuscar.style.borderColor = 'var(--green)';
-  inputBuscar.style.boxShadow = '0 0 0 3px rgba(126,201,154,.2)';
-});
-inputBuscar.addEventListener('blur', () => {
-  inputBuscar.style.borderColor = 'var(--border)';
-  inputBuscar.style.boxShadow = 'var(--shadow)';
-});
-inputBuscar.addEventListener('input', () => {
-  clearBtn.style.display = inputBuscar.value ? 'block' : 'none';
-});
-
-// Foco automático al cargar
-window.addEventListener('DOMContentLoaded', () => inputBuscar.focus());
-
-function confirmarEliminar(numero, estado) {
-  if (estado === 'pagada' || estado === 'pagada_sin_comprobante') {
-    return confirm('⚠️ La factura "' + numero + '" ya fue pagada.\n\nSi la eliminás se perderá el registro. ¿Estás seguro?');
-  }
-  return confirm('¿Eliminar la factura "' + numero + '"? Esta acción no se puede deshacer.');
-}
+initBuscador('buscar-facturas', '#mobile-facturas-list .mobile-card, #tbody-facturas tr');
 </script>
 {% endblock %}

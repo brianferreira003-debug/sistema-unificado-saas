@@ -1,18 +1,19 @@
 {% extends "base.html" %}
 {% block title %}{% if factura %}Editar factura{% else %}Nueva factura{% endif %}{% endblock %}
+{% block page_title %}{% if factura %}Editar factura{% else %}Nueva factura{% endif %}{% endblock %}
 {% block content %}
-<div style="max-width:700px">
-<div class="top-actions">
-  <h1>{% if factura %}Editar factura{% else %}Nueva factura{% endif %}</h1>
-  <a href="/facturas" class="btn btn-outline">← Volver</a>
-</div>
 
-<div class="card">
-<form method="post">
+<div style="max-width:700px;margin:0 auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <h1 style="margin:0">{% if factura %}Editar factura{% else %}Nueva factura{% endif %}</h1>
+    <a href="/facturas" class="btn btn-outline btn-sm" style="min-height:36px">← Volver</a>
+  </div>
 
-  <div class="section-title">Datos de la factura</div>
+  <div class="card">
+  <form method="post">
 
-  <div class="form-row cols2">
+    <div class="section-title">Datos de la factura</div>
+
     <div class="form-group">
       <label>Proveedor *</label>
       <select name="proveedor_id" id="sel-proveedor" required onchange="actualizarProveedor()">
@@ -29,96 +30,97 @@
         {% endfor %}
       </select>
     </div>
+
     <div class="form-group">
       <label>N° de Factura *</label>
       <input name="numero" required placeholder="Ej: A0001234"
              value="{{ factura.numero if factura else request.form.get('numero','') }}">
     </div>
-  </div>
 
-  <div class="form-row cols2">
-    <div class="form-group">
-      <label>Fecha de factura *</label>
-      <input type="date" name="fecha" required id="fecha-input"
-             value="{{ factura.fecha if factura else today }}"
-             onchange="calcularVencimiento()">
+    <div class="form-row cols2">
+      <div class="form-group">
+        <label>Fecha de factura *</label>
+        <input type="date" name="fecha" required id="fecha-input"
+               value="{{ factura.fecha if factura else today }}"
+               onchange="calcularVencimiento()">
+      </div>
+      <div class="form-group">
+        <label>Plazo (días)</label>
+        <input type="number" name="plazo_override" id="plazo-input" min="0" placeholder="Según proveedor"
+               value="{{ factura.plazo_dias if factura else '' }}"
+               onchange="calcularVencimiento()">
+        <div class="form-hint" id="info-plazo">Se autocompleta según el proveedor</div>
+      </div>
     </div>
-    <div class="form-group">
-      <label>Plazo (días)</label>
-      <input type="number" name="plazo_override" id="plazo-input" min="0" placeholder="Según proveedor"
-             value="{{ factura.plazo_dias if factura else '' }}"
-             onchange="calcularVencimiento()">
-      <div style="font-size:11px;color:#94a3b8;margin-top:3px" id="info-plazo">Se autocompleta según el proveedor</div>
-    </div>
-  </div>
 
-  <div class="form-row cols2">
-    <div class="form-group">
-      <label>Importe *</label>
-      <input type="number" step="0.01" min="0" name="importe" required
-             placeholder="0.00"
-             value="{{ factura.importe if factura else request.form.get('importe','') }}">
+    <div class="form-row cols2">
+      <div class="form-group">
+        <label>Importe *</label>
+        <input type="number" step="0.01" min="0" name="importe" required
+               placeholder="0.00"
+               value="{{ factura.importe if factura else request.form.get('importe','') }}"
+               style="font-size:18px;font-weight:700;font-family:var(--mono)">
+      </div>
+      <div class="form-group">
+        <label>Moneda</label>
+        <select name="moneda" id="sel-moneda">
+          <option value="USD" {% if not factura or factura.moneda=='USD' %}selected{% endif %}>USD</option>
+          <option value="UYU" {% if factura and factura.moneda=='UYU' %}selected{% endif %}>UYU</option>
+        </select>
+      </div>
     </div>
-    <div class="form-group">
-      <label>Moneda</label>
-      <select name="moneda" id="sel-moneda">
-        <option value="USD" {% if not factura or factura.moneda=='USD' %}selected{% endif %}>USD</option>
-        <option value="UYU" {% if factura and factura.moneda=='UYU' %}selected{% endif %}>UYU</option>
-      </select>
-    </div>
-  </div>
 
-  <div class="form-row cols2">
-    <div class="form-group">
-      <label>Tipo de pago</label>
-      <select name="tipo_pago">
-        <option value="transferencia" {% if not factura or factura.tipo_pago=='transferencia' %}selected{% endif %}>Transferencia</option>
-        <option value="cheque" {% if factura and factura.tipo_pago=='cheque' %}selected{% endif %}>Cheque</option>
-        <option value="efectivo" {% if factura and factura.tipo_pago=='efectivo' %}selected{% endif %}>Efectivo</option>
-      </select>
+    <div class="form-row cols2">
+      <div class="form-group">
+        <label>Tipo de pago</label>
+        <select name="tipo_pago">
+          <option value="transferencia" {% if not factura or factura.tipo_pago=='transferencia' %}selected{% endif %}>Transferencia</option>
+          <option value="cheque" {% if factura and factura.tipo_pago=='cheque' %}selected{% endif %}>Cheque</option>
+          <option value="efectivo" {% if factura and factura.tipo_pago=='efectivo' %}selected{% endif %}>Efectivo</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Descuento (%)</label>
+        <input type="number" step="0.1" min="0" max="100" name="descuento" id="input-descuento"
+               placeholder="0"
+               value="{{ factura.descuento if factura else '0' }}">
+        <div class="form-hint" id="info-descuento"></div>
+      </div>
     </div>
-    <div class="form-group">
-      <label>Descuento (%)</label>
-      <input type="number" step="0.1" min="0" max="100" name="descuento" id="input-descuento"
-             placeholder="0"
-             value="{{ factura.descuento if factura else '0' }}">
-      <div style="font-size:11px;color:#94a3b8;margin-top:3px" id="info-descuento"></div>
+
+    <div class="form-row cols2">
+      <div class="form-group">
+        <label>Destino / Cheque ID</label>
+        <select name="destino">
+          <option value="" {% if not factura or not factura.destino %}selected{% endif %}>— Sin destino —</option>
+          <option value="EVO" {% if factura and factura.destino=='EVO' %}selected{% endif %}>EVO</option>
+          <option value="FEDE" {% if factura and factura.destino=='FEDE' %}selected{% endif %}>FEDE</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Categoría</label>
+        <select name="categoria">
+          <option value="empresa" {% if not factura or factura.categoria=='empresa' %}selected{% endif %}>Empresa</option>
+          <option value="personal" {% if factura and factura.categoria=='personal' %}selected{% endif %}>Personal</option>
+        </select>
+      </div>
     </div>
-  </div>
 
-  <div class="form-row cols2">
     <div class="form-group">
-      <label>Destino / Cheque ID</label>
-      <select name="destino">
-        <option value="" {% if not factura or not factura.destino %}selected{% endif %}>— Sin destino —</option>
-        <option value="EVO" {% if factura and factura.destino=='EVO' %}selected{% endif %}>EVO</option>
-        <option value="FEDE" {% if factura and factura.destino=='FEDE' %}selected{% endif %}>FEDE</option>
-      </select>
+      <label>Nota</label>
+      <input name="nota" placeholder="Observaciones opcionales"
+             value="{{ factura.nota if factura else '' }}">
     </div>
-    <div class="form-group">
-      <label>Categoría</label>
-      <select name="categoria">
-        <option value="empresa" {% if not factura or factura.categoria=='empresa' %}selected{% endif %}>Empresa</option>
-        <option value="personal" {% if factura and factura.categoria=='personal' %}selected{% endif %}>Personal</option>
-      </select>
+
+    <div style="margin-top:24px;display:flex;gap:10px">
+      <button type="submit" class="btn btn-primary" style="flex:1;min-height:48px">
+        {% if factura %}💾 Guardar cambios{% else %}✅ Crear factura{% endif %}
+      </button>
+      <a href="/facturas" class="btn btn-outline" style="min-height:48px;display:flex;align-items:center">Cancelar</a>
     </div>
-  </div>
 
-  <div class="form-group">
-    <label>Nota</label>
-    <input name="nota" placeholder="Observaciones opcionales"
-           value="{{ factura.nota if factura else '' }}">
+  </form>
   </div>
-
-  <div style="margin-top:20px;display:flex;gap:10px">
-    <button type="submit" class="btn btn-primary">
-      {% if factura %}💾 Guardar cambios{% else %}✅ Crear factura{% endif %}
-    </button>
-    <a href="/facturas" class="btn btn-outline">Cancelar</a>
-  </div>
-
-</form>
-</div>
 </div>
 
 <script>
@@ -151,8 +153,7 @@ function calcularVencimiento() {
   const d = new Date(fecha + 'T00:00:00');
   d.setDate(d.getDate() + plazo);
   const iso = d.toISOString().split('T')[0];
-  document.getElementById('info-plazo').textContent =
-    'Vencimiento estimado: ' + iso.split('-').reverse().join('/');
+  document.getElementById('info-plazo').textContent = 'Vencimiento estimado: ' + iso.split('-').reverse().join('/');
 }
 
 window.addEventListener('DOMContentLoaded', function() {
