@@ -845,6 +845,23 @@ tbody tr:active td { background: var(--surface-2); }
   .btn-fab { display: none; }
   .header { display: none; }
 
+  /* Main content desktop — full width */
+  .main {
+    margin-left: 220px;
+    max-width: none;
+    padding: 24px 32px;
+    padding-bottom: 24px;
+  }
+
+  /* Tables — sin min-width en desktop */
+  .table-wrap {
+    overflow-x: auto;
+  }
+  table {
+    min-width: unset;
+    width: 100%;
+  }
+
   /* Sidebar desktop */
   .sidebar {
     display: flex;
