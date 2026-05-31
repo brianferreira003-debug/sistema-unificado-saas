@@ -3,105 +3,77 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0f1a12">
 <title>{% block title %}Sistema de Gestión{% endblock %}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/style.css">
 </head>
-
 <body>
 
-<!-- ═══ HEADER (mobile) ═══ -->
 <header class="header">
+  <button class="hamburger" onclick="toggleSidebar()" aria-label="Menú"><span></span><span></span><span></span></button>
   <div class="header-logo">
-    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAELUlEQVR4nKWXT2hcVRTGv/dmrKJCqIv4B0uMtZQOBCuxFar4dCOWkA6DXNJm1dUIQgSNK0UeghbEjYEuCiro0qEggi66y0oUXChCEN1YY4KlKq1No5lM5ufi3fvmzp33ppl4YJg39937neffnHOuVCJpmsaSBLwCXAU2gG2gA2wB/wD/2s8W0AY27WcD+At4w6JZTxl7I78CNDl/8njvkGhFC6alZXIPh6SFEnqlKi6M+RdRxKSDkvS8vJyIVe15LCTNftdKXiHt45V1JfYrq1K0vj4OLfg6pNIkprN5p3Aug3DjudWF5Yvgc+DNffcBa7NzMzv9zFLJI2NMRV5cUqSpCpJwPsWdNt+dyz4pdwVcNF75+/9RJKMMbkH03SAazA5kiSp2qSJTp06/YDN6K4lcCRPWzfHwFFPgY711iZwUFJkjKlYg4rCJNXn5g4Ax4CJOOrtmZ6evs1aOBO4+aKzzFkHfBR44YzvSUmKImnu7Nmcy7nvReCGPbQJfAu8nKbpHZJUq5l9dt8scA24boy5T1Js3RhJio1pjgG/kdWEM/7ZNE2rl+cr4Kblugm8JnsA+pMM4DtgSpJqJlfiMPCUDaYXurxuHAMeC7x3EPg6wM4TVsGCy/a2/f0HcMQHdN4M88Zfc3ufq9cPAJctVhti+1xdUV7pXCb/NDt7+l6XTH5Gh5JnuBQbY8ZsOB15oahk3c/2v4EnJEVl5TRUQlJEVsavWowdD++WCvge+QKYHOL2MokkqdFo3A+0SrALFXAbloG6xzhiN+tXGDgJXCpSwlfAueizqFcL4tFb6YASsXsAPg648MFds7gC2WOSJLH01khNJBRjTOSB/x5wqSgEbbL6/0hgyajih+Ah4F2y4cU1qsIc8GUDeHtpaen2PSiRWd1qVYA3getlJGUKbHvP3wO1DHRX+eD+hpPANyWYuZQBVpVNNDuSHpbUliRjViINrQVp7GJer9e3JE1K6lqs4uGHwf+mywOn9TPS3koxcJxseMViDnD5IdgONlwBTmaWZ81ofn5+P1mPD5WILOGE7ZR+A3sWWA0MdEMNAs4FWq0D559vNB6U+trxFPAz8IsxL92t3swXGWMqaZpus/myRla687ONRmMceA/4NeA678JwHDDAiWazOVbglingT+/gBesZfyDxDdkAToShW1xcvMtyvQA8WRpPa1EsKbaD6Y9eHJ37jkqmoiSpAofotVuX7WvGmHs0vItGOWGSJFW7KZL6htJXPXI8gk8dCvBB8M7tfcfHkjcfDmvruXatlqkAP1A8lneBD4ELnlecuMHj8sLCwl4KWT5iTVJSQHYhTslHpVGvZia/mk0oKyDdEk07Kr+auTMTkrTSu+71SWF1qtVqrlutK+tcsYqvX8Oudi7GqwHmLqV3Q36dbIQOp+ZhskNWAc9FHlaR/AdaaOPDl761OgAAAABJRU5ErkJggg==" alt="Logo">
-    <div class="header-logo-text">
-      <div class="header-logo-title">Gestión</div>
-      <div class="header-logo-sub">Sistema unificado</div>
-    </div>
+    <div class="header-logo-title">Gestión</div>
+    <div class="header-logo-sub">Sistema unificado</div>
   </div>
   <div class="header-title">{% block page_title %}{% endblock %}</div>
-  <div class="header-actions">
-    {% if current_user.is_authenticated and current_user.is_admin %}
-    <a href="/admin" class="btn btn-xs btn-outline" style="font-size:11px;min-height:30px;padding:4px 10px">⚙ Admin</a>
-    {% endif %}
-  </div>
 </header>
 
-<!-- ═══ MAIN CONTENT ═══ -->
 <main class="main">
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for category, message in messages %}
-      <div class="alert alert-{{ category }}" style="margin-bottom:14px">
-        {{ message }}
-      </div>
+      <div class="alert alert-{{ category }}" style="margin-bottom:14px">{{ message }}</div>
       {% endfor %}
     {% endif %}
   {% endwith %}
   {% block content %}{% endblock %}
 </main>
 
-<!-- ═══ BOTTOM NAVIGATION (mobile) ═══ -->
 <nav class="bottom-nav">
   <a href="/" class="bn-item {% if request.path == '/' %}active{% endif %}">
-    <span class="bn-icon">🏠</span>
-    <span class="bn-label">Inicio</span>
+    <span class="bn-icon">🏠</span><span class="bn-label">Inicio</span>
   </a>
   <a href="/cobros-pagos" class="bn-item {% if request.path.startswith('/cobros-pagos') %}active{% endif %}">
-    <span class="bn-icon">💸</span>
-    <span class="bn-label">Cobros</span>
+    <span class="bn-icon">💸</span><span class="bn-label">Cobros</span>
   </a>
   <a href="/facturas" class="bn-item {% if request.path.startswith('/facturas') %}active{% endif %}">
-    <span class="bn-icon">🧾</span>
-    <span class="bn-label">Facturas</span>
+    <span class="bn-icon">🧾</span><span class="bn-label">Facturas</span>
   </a>
   <a href="/pagos" class="bn-item {% if request.path.startswith('/pagos') %}active{% endif %}">
-    <span class="bn-icon">📤</span>
-    <span class="bn-label">Pagos</span>
+    <span class="bn-icon">📤</span><span class="bn-label">Pagos</span>
   </a>
   <button class="bn-item" onclick="toggleMoreMenu(event)">
-    <span class="bn-icon">☰</span>
-    <span class="bn-label">Más</span>
+    <span class="bn-icon">☰</span><span class="bn-label">Más</span>
   </button>
 </nav>
 
-<!-- ═══ SIDEBAR (desktop) ═══ -->
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">
-    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAELUlEQVR4nKWXT2hcVRTGv/dmrKJCqIv4B0uMtZQOBCuxFar4dCOWkA6DXNJm1dUIQgSNK0UeghbEjYEuCiro0qEggi66y0oUXChCEN1YY4KlKq1No5lM5ufi3fvmzp33ppl4YJg39937neffnHOuVCJpmsaSBLwCXAU2gG2gA2wB/wD/2s8W0AY27WcD+At4w6JZTxl7I78CNDl/8njvkGhFC6alZXIPh6SFEnqlKi6M+RdRxKSDkvS8vJyIVe15LCTNftdKXiHt45V1JfYrq1K0vj4OLfg6pNIkprN5p3Aug3DjudWF5Yvgc+DNffcBa7NzMzv9zFLJI2NMRV5cUqSpCpJwPsWdNt+dyz4pdwVcNF75+/9RJKMMbkH03SAazA5kiSp2qSJTp06/YDN6K4lcCRPWzfHwFFPgY711iZwUFJkjKlYg4rCJNXn5g4Ax4CJOOrtmZ6evs1aOBO4+aKzzFkHfBR44YzvSUmKImnu7Nmcy7nvReCGPbQJfAu8nKbpHZJUq5l9dt8scA24boy5T1Js3RhJio1pjgG/kdWEM/7ZNE2rl+cr4Kblugm8JnsA+pMM4DtgSpJqJlfiMPCUDaYXurxuHAMeC7x3EPg6wM4TVsGCy/a2/f0HcMQHdN4M88Zfc3ufq9cPAJctVhti+1xdUV7pXCb/NDt7+l6XTH5Gh5JnuBQbY8ZsOB15oahk3c/2v4EnJEVl5TRUQlJEVsavWowdD++WCvge+QKYHOL2MokkqdFo3A+0SrALFXAbloG6xzhiN+tXGDgJXCpSwlfAueizqFcL4tFb6YASsXsAPg648MFds7gC2WOSJLH01khNJBRjTOSB/x5wqSgEbbL6/0hgyajih+Ah4F2y4cU1qsIc8GUDeHtpaen2PSiRWd1qVYA3getlJGUKbHvP3wO1DHRX+eD+hpPANyWYuZQBVpVNNDuSHpbUliRjViINrQVp7GJer9e3JE1K6lqs4uGHwf+mywOn9TPS3koxcJxseMViDnD5IdgONlwBTmaWZ81ofn5+P1mPD5WILOGE7ZR+A3sWWA0MdEMNAs4FWq0D559vNB6U+trxFPAz8IsxL92t3swXGWMqaZpus/myRla687ONRmMceA/4NeA678JwHDDAiWazOVbglingT+/gBesZfyDxDdkAToShW1xcvMtyvQA8WRpPa1EsKbaD6Y9eHJ37jkqmoiSpAofotVuX7WvGmHs0vItGOWGSJFW7KZL6htJXPXI8gk8dCvBB8M7tfcfHkjcfDmvruXatlqkAP1A8lneBD4ELnlecuMHj8sLCwl4KWT5iTVJSQHYhTslHpVGvZia/mk0oKyDdEk07Kr+auTMTkrTSu+71SWF1qtVqrlutK+tcsYqvX8Oudi7GqwHmLqV3Q36dbIQOp+ZhskNWAc9FHlaR/AdaaOPDl761OgAAAABJRU5ErkJggg==" alt="Logo">
     <div>
       <div class="sidebar-logo-title">Gestión</div>
       <div class="sidebar-logo-sub">Sistema unificado</div>
     </div>
   </div>
-
   <div class="sidebar-group">
     <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}">
       <span class="nav-icon">🏠</span> Inicio
     </a>
   </div>
   <div class="sidebar-divider"></div>
-
   <div class="sidebar-group">
     <div class="sidebar-group-label">📥 Cobros</div>
-    <a href="/cobros-pagos?tipo=Cobro" class="nav-item {% if request.path == '/cobros-pagos' and request.args.get('tipo') == 'Cobro' %}active{% endif %}">
+    <a href="/cobros-pagos?tipo=Cobro" class="nav-item">
       <span class="nav-icon">✚</span> Registrar cobro
     </a>
-    <a href="/cobros-pagos/historial?tipo=Cobro" class="nav-item {% if request.path == '/cobros-pagos/historial' and request.args.get('tipo') == 'Cobro' %}active{% endif %}">
+    <a href="/cobros-pagos/historial?tipo=Cobro" class="nav-item">
       <span class="nav-icon">≡</span> Historial cobros
     </a>
   </div>
   <div class="sidebar-divider"></div>
-
   <div class="sidebar-group">
     <div class="sidebar-group-label">📤 Pagos</div>
     <a href="/facturas" class="nav-item {% if request.path.startswith('/facturas') %}active{% endif %}">
       <span class="nav-icon">🧾</span> Facturas a pagar
-    </a>
-    <a href="/cobros-pagos?tipo=Pago" class="nav-item {% if request.path == '/cobros-pagos' and request.args.get('tipo') == 'Pago' %}active{% endif %}">
-      <span class="nav-icon">✚</span> Registrar pago
     </a>
     <a href="/pagos" class="nav-item {% if request.path.startswith('/pagos') %}active{% endif %}">
       <span class="nav-icon">✓</span> Historial pagos
@@ -111,50 +83,48 @@
     </a>
   </div>
   <div class="sidebar-divider"></div>
-
   <div class="sidebar-group">
     <div class="sidebar-group-label">📊 Informes</div>
-    <a href="/informe" class="nav-item {% if request.path.startswith('/informe') %}active{% endif %}">
+    <a href="/informe" class="nav-item">
       <span class="nav-icon">◧</span> Deuda pendiente
     </a>
-    <a href="/cobros-pagos/informe" class="nav-item {% if request.path == '/cobros-pagos/informe' %}active{% endif %}">
+    <a href="/cobros-pagos/informe" class="nav-item">
       <span class="nav-icon">◈</span> Cobros y pagos
     </a>
   </div>
   <div class="sidebar-divider"></div>
-
   <div class="sidebar-group">
     <div class="sidebar-group-label">⚙️ Sistema</div>
-    <a href="/estado_cuenta" class="nav-item {% if request.path.startswith('/estado_cuenta') %}active{% endif %}">
+    <a href="/estado_cuenta" class="nav-item">
       <span class="nav-icon">▤</span> Estado de cuenta
     </a>
-    <a href="/importar" class="nav-item {% if request.path.startswith('/importar') %}active{% endif %}">
+    <a href="/importar" class="nav-item">
       <span class="nav-icon">↑</span> Importar Excel
     </a>
-    <a href="/backup" class="nav-item {% if request.path.startswith('/backup') %}active{% endif %}">
+    <a href="/backup" class="nav-item">
       <span class="nav-icon">◎</span> Backup
     </a>
-    <a href="/configuracion" class="nav-item {% if request.path.startswith('/configuracion') %}active{% endif %}">
+    <a href="/configuracion" class="nav-item">
       <span class="nav-icon">⚙</span> Configuración
     </a>
   </div>
-
   <div class="sidebar-footer">
     {% if current_user.is_authenticated %}
       <div style="margin-bottom:6px">
         <span style="color:rgba(255,255,255,.6)">{{ current_user.username }}</span>
         {% if current_user.is_admin %}
-        <span class="badge badge-purple" style="font-size:9px;margin-left:4px">ADMIN</span>
+        <span class="badge" style="background:rgba(126,201,154,.2);color:#7EC99A;font-size:9px;margin-left:4px;padding:2px 6px;border-radius:10px">ADMIN</span>
         {% endif %}
       </div>
       <a href="/logout" style="color:rgba(255,255,255,.4);font-size:11px;text-decoration:none">→ Cerrar sesión</a>
     {% else %}
-      v3.0 SaaS
+      v3.2 SaaS
     {% endif %}
   </div>
 </aside>
 
-<!-- ═══ MORE MENU (mobile overlay) ═══ -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
 <div class="dropdown-backdrop" id="more-backdrop" onclick="toggleMoreMenu()"></div>
 <div class="dropdown-menu" id="more-menu" style="min-width:220px">
   <div style="padding:10px 16px;font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.8px">Más opciones</div>
@@ -169,91 +139,27 @@
   <a href="/proveedores" class="dropdown-item">🏢 Proveedores</a>
   {% if current_user.is_authenticated %}
   <div class="dropdown-divider"></div>
-  <a href="/logout" class="dropdown-item danger">→ Cerrar sesión</a>
+  <a href="/logout" class="dropdown-item" style="color:var(--red)">→ Cerrar sesión</a>
   {% endif %}
 </div>
 
 <script>
-(function() {
-  // ═══ MORE MENU (mobile) ═══
-  function moreMenuOpen() {
-    document.getElementById('more-menu').classList.add('open');
-    document.getElementById('more-backdrop').classList.add('open');
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+function toggleMoreMenu(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('more-menu');
+  const backdrop = document.getElementById('more-backdrop');
+  if (menu.classList.contains('open')) {
+    menu.classList.remove('open');
+    backdrop.classList.remove('open');
+  } else {
+    menu.classList.add('open');
+    backdrop.classList.add('open');
   }
-  function moreMenuClose() {
-    document.getElementById('more-menu').classList.remove('open');
-    document.getElementById('more-backdrop').classList.remove('open');
-  }
-  function moreMenuToggle(e) {
-    if (e) e.stopPropagation();
-    if (document.getElementById('more-menu').classList.contains('open')) {
-      moreMenuClose();
-    } else {
-      // Cerrar dropdowns abiertos
-      document.querySelectorAll('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
-      moreMenuOpen();
-    }
-  }
-
-  // Exponer globalmente para el onclick inline
-  window.toggleMoreMenu = moreMenuToggle;
-
-  // Click en backdrop cierra menú
-  document.getElementById('more-backdrop').addEventListener('click', function() {
-    moreMenuClose();
-  });
-
-  // ═══ DROPDOWNS (desktop) ═══
-  document.addEventListener('click', function(e) {
-    if (!e.target.closest('.dropdown')) {
-      document.querySelectorAll('.dropdown-menu.open').forEach(m => {
-        if (m.id !== 'more-menu') m.classList.remove('open');
-      });
-    }
-  });
-  window.toggleDropdown = function(id) {
-    const m = document.getElementById(id);
-    document.querySelectorAll('.dropdown-menu.open').forEach(x => { if(x !== m) x.classList.remove('open'); });
-    m.classList.toggle('open');
-  };
-
-  // ═══ SEARCH CLEAR ═══
-  document.querySelectorAll('.search-wrap').forEach(wrap => {
-    const input = wrap.querySelector('input');
-    const clear = wrap.querySelector('.search-clear');
-    if (input && clear) {
-      input.addEventListener('input', () => { clear.style.display = input.value ? 'block' : 'none'; });
-      clear.addEventListener('click', () => { input.value = ''; input.dispatchEvent(new Event('input')); input.focus(); clear.style.display = 'none'; });
-    }
-  });
-
-  // ═══ BUSCADOR GENÉRICO ═══
-  window.initBuscador = function(inputId, targetSelector) {
-    function setup() {
-      const input = document.getElementById(inputId);
-      if (!input) return;
-      const container = input.closest('.search-bar') || input.closest('.search-wrap') || input.parentElement;
-      const clearBtn = container ? container.querySelector('.search-clear') : null;
-      const contador = document.getElementById(inputId + '-count');
-      function filtrar() {
-        const q = input.value.trim().toLowerCase();
-        if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
-        const items = document.querySelectorAll(targetSelector);
-        let visible = 0;
-        items.forEach(item => {
-          const match = !q || item.textContent.toLowerCase().includes(q);
-          item.style.display = match ? '' : 'none';
-          if (match) visible++;
-        });
-        if (contador) contador.textContent = q ? visible + ' resultado(s)' : '';
-      }
-      input.addEventListener('input', filtrar);
-      if (clearBtn) clearBtn.addEventListener('click', () => { input.value=''; filtrar(); input.focus(); });
-    }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup);
-    else setup();
-  };
-})();
+}
 </script>
 </body>
 </html>
