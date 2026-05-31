@@ -351,6 +351,65 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
   .kpi-value { font-size: 17px; }
 }
 
+/* ═══════════════════════════════════════════
+   ANIMACIONES — Emil Kowalski Principles
+   Restraint, purposeful motion, under 300ms
+   ═══════════════════════════════════════════ */
+
+/* Card entrance */
+.card {
+  animation: fadeSlideIn .25s ease-out both;
+}
+.card:nth-child(2) { animation-delay: .05s; }
+.card:nth-child(3) { animation-delay: .1s; }
+.card:nth-child(4) { animation-delay: .15s; }
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Sidebar nav items */
+.nav-item {
+  transition: background .15s ease, color .15s ease;
+}
+.nav-item:hover {
+  background: rgba(255,255,255,.1);
+}
+
+/* Table rows */
+tbody tr {
+  transition: background .1s ease;
+}
+
+/* Buttons press */
+.btn {
+  transition: transform .1s ease, box-shadow .1s ease;
+}
+.btn:active {
+  transform: scale(.97);
+}
+
+/* KPI value counter feel */
+.kpi-value {
+  animation: fadeSlideIn .3s ease-out both;
+}
+
+/* Sidebar display fix - ensure visible on desktop */
+@media (min-width: 769px) {
+  .sidebar {
+    display: flex !important;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 @media print {
   .header, .sidebar, .bottom-nav { display: none !important; }
   .main { margin: 0; padding: 0; }
