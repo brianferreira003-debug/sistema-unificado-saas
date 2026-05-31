@@ -8,7 +8,6 @@ import os
 import json
 import io
 import re
-import hashlib
 import secrets
 from datetime import date, timedelta, datetime
 from contextlib import contextmanager
@@ -22,6 +21,10 @@ from flask_login import (
     LoginManager, UserMixin, login_user, logout_user,
     login_required, current_user
 )
+from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # ════════════ CONFIGURACIÓN DESDE .env ════════════
 
@@ -64,6 +67,19 @@ login_manager.login_view = 'login'
 login_manager.login_message = 'Iniciá sesión para acceder.'
 login_manager.login_message_category = 'warning'
 
+# ════════════ CSRF PROTECTION ════════════
+
+csrf = CSRFProtect(app)
+
+# ════════════ RATE LIMITING ════════════
+
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://",
+)
+
 # ════════════ MODELO USUARIO (DB maestra) ════════════
 
 MASTER_DB = os.path.join(DATA_DIR, 'master.db')
@@ -93,11 +109,18 @@ def init_master_db():
             nombre TEXT DEFAULT '',
             rol TEXT DEFAULT 'usuario',
             activo INTEGER DEFAULT 1,
+            force_password_change INTEGER DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(empresa_id, username)
         );
     """)
     conn.commit()
+
+    # Agregar columna force_password_change si no existe (migración para DBs existentes)
+    cols = [row[1] for row in conn.execute("PRAGMA table_info(usuarios)").fetchall()]
+    if 'force_password_change' not in cols:
+        conn.execute("ALTER TABLE usuarios ADD COLUMN force_password_change INTEGER DEFAULT 1")
+        conn.commit()
 
     # Crear admin global si no existe
     admin = conn.execute("SELECT id FROM usuarios WHERE rol='admin'").fetchone()
@@ -111,14 +134,14 @@ def init_master_db():
         )
         empresa_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
 
-        # Admin / admin123  (cambiar en producción!)
-        pw_hash = hashlib.sha256('admin123'.encode()).hexdigest()
+        # Admin con hash seguro (cambiar en producción!)
+        pw_hash = generate_password_hash('admin123')
         conn.execute(
-            "INSERT INTO usuarios (empresa_id, username, password_hash, nombre, rol) VALUES (?,?,?,?,?)",
-            (empresa_id, 'admin', pw_hash, 'Administrador', 'admin')
+            "INSERT INTO usuarios (empresa_id, username, password_hash, nombre, rol, force_password_change) VALUES (?,?,?,?,?,?)",
+            (empresa_id, 'admin', pw_hash, 'Administrador', 'admin', 1)
         )
         conn.commit()
-        print("\n  Admin creado: admin / admin123  (CAMBIAR EN PRODUCCIÓN)\n")
+        print("\n  Admin creado: admin / admin123  (CAMBIAR EN PRODUCCIÓN - force_password_change activo)\n")
 
     conn.close()
 
@@ -127,12 +150,13 @@ import sqlite3
 init_master_db()
 
 class User(UserMixin):
-    def __init__(self, id, empresa_id, username, nombre, rol):
+    def __init__(self, id, empresa_id, username, nombre, rol, force_password_change=0):
         self.id = id
         self.empresa_id = empresa_id
         self.username = username
         self.nombre = nombre
         self.rol = rol
+        self.force_password_change = force_password_change
 
     @property
     def is_admin(self):
@@ -142,12 +166,13 @@ class User(UserMixin):
 def load_user(user_id):
     conn = get_master_db()
     row = conn.execute("""
-        SELECT u.id, u.empresa_id, u.username, u.nombre, u.rol
+        SELECT u.id, u.empresa_id, u.username, u.nombre, u.rol, u.force_password_change
         FROM usuarios u WHERE u.id=? AND u.activo=1
     """, (user_id,)).fetchone()
     conn.close()
     if row:
-        return User(row['id'], row['empresa_id'], row['username'], row['nombre'], row['rol'])
+        return User(row['id'], row['empresa_id'], row['username'], row['nombre'], row['rol'],
+                    row['force_password_change'] or 0)
     return None
 
 # ════════════ HELPERS TENANT ════════════
@@ -343,6 +368,7 @@ def get_resumen(empresa_id):
 # ════════════ RUTAS AUTH ════════════
 
 @app.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
@@ -357,7 +383,8 @@ def login():
         else:
             conn = get_master_db()
             row = conn.execute("""
-                SELECT u.id, u.empresa_id, u.username, u.password_hash, u.nombre, u.rol, u.activo,
+                SELECT u.id, u.empresa_id, u.username, u.password_hash, u.nombre, u.rol,
+                       u.activo, u.force_password_change,
                        e.nombre as empresa_nombre
                 FROM usuarios u
                 JOIN empresas e ON e.id = u.empresa_id
@@ -365,10 +392,14 @@ def login():
             """, (username,)).fetchone()
             conn.close()
 
-            pw_hash = hashlib.sha256(password.encode()).hexdigest()
-            if row and row['password_hash'] == pw_hash and row['activo']:
-                user = User(row['id'], row['empresa_id'], row['username'], row['nombre'], row['rol'])
+            if row and check_password_hash(row['password_hash'], password) and row['activo']:
+                user = User(row['id'], row['empresa_id'], row['username'], row['nombre'], row['rol'],
+                            row['force_password_change'] or 0)
                 login_user(user)
+                # Forzar cambio de contraseña si es primer login
+                if user.force_password_change:
+                    flash('Por seguridad, debés cambiar tu contraseña ahora.', 'warning')
+                    return redirect(url_for('cambiar_password'))
                 return redirect(url_for('index'))
             else:
                 error = 'Usuario o contraseña incorrectos.'
@@ -380,6 +411,36 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('login'))
+
+# ════════════ CAMBIO DE CONTRASEÑA (primer login / forzado) ════════════
+
+@app.route('/cambiar-password', methods=['GET', 'POST'])
+@login_required
+def cambiar_password():
+    if request.method == 'POST':
+        new_pw = request.form.get('new_password', '').strip()
+        confirm_pw = request.form.get('confirm_password', '').strip()
+
+        if not new_pw or not confirm_pw:
+            flash('Completá ambos campos.', 'danger')
+            return redirect(url_for('cambiar_password'))
+        if new_pw != confirm_pw:
+            flash('Las contraseñas no coinciden.', 'danger')
+            return redirect(url_for('cambiar_password'))
+        if len(new_pw) < 8:
+            flash('La contraseña debe tener al menos 8 caracteres.', 'danger')
+            return redirect(url_for('cambiar_password'))
+
+        conn = get_master_db()
+        pw_hash = generate_password_hash(new_pw)
+        conn.execute("UPDATE usuarios SET password_hash=?, force_password_change=0 WHERE id=?",
+                     (pw_hash, current_user.id))
+        conn.commit()
+        conn.close()
+        flash('Contraseña actualizada correctamente.', 'success')
+        return redirect(url_for('index'))
+
+    return render_template('cambiar_password.html')
 
 # ════════════ RUTAS ADMIN (gestión de empresas y usuarios) ════════════
 
@@ -432,10 +493,10 @@ def admin_nueva_empresa():
     )
     empresa_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
 
-    pw_hash = hashlib.sha256(password.encode()).hexdigest()
+    pw_hash = generate_password_hash(password)
     conn.execute(
-        "INSERT INTO usuarios (empresa_id, username, password_hash, nombre, rol) VALUES (?,?,?,?,?)",
-        (empresa_id, username, pw_hash, usuario_nombre or username, 'usuario')
+        "INSERT INTO usuarios (empresa_id, username, password_hash, nombre, rol, force_password_change) VALUES (?,?,?,?,?,?)",
+        (empresa_id, username, pw_hash, usuario_nombre or username, 'usuario', 1)
     )
     conn.commit()
     conn.close()
@@ -443,7 +504,7 @@ def admin_nueva_empresa():
     # Crear DB del tenant
     init_tenant_db(db_path)
 
-    flash(f'Empresa "{nombre}" creada. Usuario: {username}', 'success')
+    flash(f'Empresa "{nombre}" creada. Usuario: {username} (debe cambiar contraseña en primer login)', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/empresa/<int:eid>/usuario/nuevo', methods=['POST'])
@@ -459,14 +520,14 @@ def admin_nuevo_usuario(eid):
         return redirect(url_for('admin_panel'))
 
     conn = get_master_db()
-    pw_hash = hashlib.sha256(password.encode()).hexdigest()
+    pw_hash = generate_password_hash(password)
     try:
         conn.execute(
-            "INSERT INTO usuarios (empresa_id, username, password_hash, nombre, rol) VALUES (?,?,?,?,?)",
-            (eid, username, pw_hash, nombre or username, 'usuario')
+            "INSERT INTO usuarios (empresa_id, username, password_hash, nombre, rol, force_password_change) VALUES (?,?,?,?,?,?)",
+            (eid, username, pw_hash, nombre or username, 'usuario', 1)
         )
         conn.commit()
-        flash(f'Usuario "{username}" creado.', 'success')
+        flash(f'Usuario "{username}" creado (debe cambiar contraseña en primer login).', 'success')
     except Exception:
         flash(f'El usuario "{username}" ya existe en esa empresa.', 'danger')
     conn.close()
@@ -494,8 +555,8 @@ def admin_reset_password(uid):
         flash('La contraseña no puede estar vacía.', 'danger')
         return redirect(url_for('admin_panel'))
     conn = get_master_db()
-    pw_hash = hashlib.sha256(new_pw.encode()).hexdigest()
-    conn.execute("UPDATE usuarios SET password_hash=? WHERE id=?", (pw_hash, uid))
+    pw_hash = generate_password_hash(new_pw)
+    conn.execute("UPDATE usuarios SET password_hash=?, force_password_change=1 WHERE id=?", (pw_hash, uid))
     conn.commit()
     conn.close()
     flash('Contraseña actualizada.', 'success')
