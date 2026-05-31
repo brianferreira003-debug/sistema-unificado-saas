@@ -17,14 +17,15 @@ from flask import (
     Flask, render_template, request, redirect, url_for,
     send_file, jsonify, make_response, flash, abort
 )
-from flask_login import (
-    LoginManager, UserMixin, login_user, logout_user,
-    login_required, current_user
-)
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.security import generate_password_hash, check_password_hash
+from whitenoise import WhiteNoise
+from flask_login import (
+    LoginManager, UserMixin, login_user, logout_user,
+    login_required, current_user
+)
 
 # ════════════ CONFIGURACIÓN DESDE .env ════════════
 
@@ -58,6 +59,9 @@ CONFIG_FILE = os.path.join(BASE_DIR, 'config.json')
 
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(TENANT_DIR, exist_ok=True)
+
+# WhiteNoise para servir archivos estáticos en producción
+app.wsgi_app = WhiteNoise(app.wsgi_app, root=os.path.join(BASE_DIR, 'static'), prefix='static/')
 
 # ════════════ LOGIN ════════════
 
