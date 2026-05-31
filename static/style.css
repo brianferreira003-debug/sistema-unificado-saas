@@ -141,6 +141,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; colo
   padding: 0;
   transform: translateX(-100%);
   transition: transform .25s ease;
+  overflow-y: auto; /* SCROLL si el contenido excede */
 }
 .sidebar.open { transform: translateX(0); display: flex; }
 .sidebar-logo {
@@ -239,6 +240,36 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 .form-row.cols2 { grid-template-columns: 1fr 1fr; }
 .form-row.cols3 { grid-template-columns: 1fr 1fr 1fr; }
 
+/* ═══ SEGMENTED CONTROL ═══ */
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.segmented-btn {
+  padding: 8px 20px;
+  border: none;
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+}
+.segmented-btn.active.green {
+  background: var(--green);
+  color: #fff;
+}
+.segmented-btn.active.red {
+  background: var(--red);
+  color: #fff;
+}
+.segmented-btn:hover:not(.active) {
+  background: var(--surface-2);
+}
+
 /* ═══ BUTTONS ═══ */
 .btn {
   display: inline-flex;
@@ -297,9 +328,10 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 
   /* Sidebar fijo */
   .sidebar {
-    display: flex;
+    display: flex !important;
     transform: none;
     width: 220px;
+    height: 100vh;
     min-height: 100vh;
     background: var(--accent);
     flex-direction: column;
@@ -309,6 +341,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
     bottom: 0;
     z-index: 100;
     padding: 0;
+    overflow-y: auto; /* SCROLL si el contenido excede */
   }
 
   /* Contenido principal — full width después del sidebar */
@@ -393,13 +426,6 @@ tbody tr {
 /* KPI value counter feel */
 .kpi-value {
   animation: fadeSlideIn .3s ease-out both;
-}
-
-/* Sidebar display fix - ensure visible on desktop */
-@media (min-width: 769px) {
-  .sidebar {
-    display: flex !important;
-  }
 }
 
 /* Reduced motion preference */
