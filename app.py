@@ -61,7 +61,9 @@ os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(TENANT_DIR, exist_ok=True)
 
 # WhiteNoise para servir archivos estáticos en producción
-app.wsgi_app = WhiteNoise(app.wsgi_app, root=os.path.join(BASE_DIR, 'static'), prefix='static/')
+_static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
+if os.path.isdir(_static_dir):
+    app.wsgi_app = WhiteNoise(app.wsgi_app, root=_static_dir, prefix='static/')
 
 # ════════════ LOGIN ════════════
 
