@@ -1,30 +1,30 @@
 {% extends "base.html" %}
 {% block title %}Saldo a favor — {{ proveedor.nombre }}{% endblock %}
 {% block content %}
-<div style="max-width:600px">
+<div class="mw-600">
 
 <div class="top-actions">
   <div>
     <h1>Saldo a favor</h1>
-    <div style="font-size:13px;color:var(--text-3);margin-top:2px">{{ proveedor.nombre }}</div>
+    <div class="mt-76c0a3">{{ proveedor.nombre }}</div>
   </div>
   <a href="/proveedores" class="btn btn-outline">← Volver</a>
 </div>
 
 {% if total > 0 %}
-<div class="kpi" style="margin-bottom:20px;border-color:#86efac;background:#f0fdf4">
+<div class="kpi" class="mb-edfd77">
   <div class="kpi-accent-bar green"></div>
   <div class="kpi-label">Saldo total disponible</div>
   <div class="kpi-value green">{{ "%.2f"|format(total) }} {{ proveedor.moneda }}</div>
   <div class="kpi-sub">Se aplicará automáticamente al próximo pago</div>
 </div>
 {% else %}
-<div class="alert info" style="margin-bottom:20px">Este proveedor no tiene saldo a favor actualmente.</div>
+<div class="alert info" class="mb-20">Este proveedor no tiene saldo a favor actualmente.</div>
 {% endif %}
 
 <!-- Formulario nuevo saldo -->
-<div class="card" style="margin-bottom:20px">
-  <h2 style="margin-bottom:14px">Registrar saldo a favor</h2>
+<div class="card" class="mb-20">
+  <h2 class="mb-14">Registrar saldo a favor</h2>
   <form method="post">
     <div class="form-row cols2">
       <div class="form-group">
@@ -59,7 +59,7 @@
 
 <!-- Historial -->
 {% if saldos %}
-<h2 style="margin-bottom:10px">Historial de saldos</h2>
+<h2 class="mb-10">Historial de saldos</h2>
 <div class="table-wrap">
 <table>
   <thead>
@@ -68,16 +68,16 @@
   <tbody>
   {% for s in saldos %}
   <tr>
-    <td style="font-family:var(--mono);font-size:12px;color:var(--text-3)">{{ s.fecha }}</td>
-    <td style="font-weight:700;color:var(--green);font-family:var(--mono)">
+    <td class="tc-c87339">{{ s.fecha }}</td>
+    <td class="clr-4777c3">
       +{{ "%.2f"|format(s.monto) }} {{ s.moneda }}
     </td>
-    <td style="font-size:12.5px">{{ s.motivo or '—' }}</td>
-    <td style="font-size:12px;color:var(--text-3)">{{ s.referencia or '—' }}</td>
+    <td class="fs-ea8bbc">{{ s.motivo or '—' }}</td>
+    <td class="tc-4ada39">{{ s.referencia or '—' }}</td>
     <td>
       <form method="post" action="/proveedores/{{ proveedor.id }}/saldo-favor/{{ s.id }}/eliminar"
             onsubmit="return confirm('¿Eliminar este saldo a favor?')">
-        <button type="submit" class="btn btn-ghost btn-xs" style="color:var(--red)">🗑</button>
+        <button type="submit" class="btn btn-ghost btn-xs" class="clr-e09362">🗑</button>
       </form>
     </td>
   </tr>

@@ -3,10 +3,10 @@
 {% block page_title %}{% if proveedor %}Editar proveedor{% else %}Nuevo proveedor{% endif %}{% endblock %}
 {% block content %}
 
-<div style="max-width:700px;margin:0 auto">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-    <h1 style="margin:0">{% if proveedor %}Editar: {{ proveedor.nombre }}{% else %}Nuevo proveedor{% endif %}</h1>
-    <a href="/proveedores" class="btn btn-outline btn-sm" style="min-height:36px">← Volver</a>
+<div class="w-93387f">
+  <div class="flex-08db7b">
+    <h1 class="m-0">{% if proveedor %}Editar: {{ proveedor.nombre }}{% else %}Nuevo proveedor{% endif %}</h1>
+    <a href="/proveedores" class="btn btn-outline btn-sm" class="st-181b43">← Volver</a>
   </div>
 
   <div class="card">
@@ -52,36 +52,36 @@
     <div class="section-title">Descuento por defecto</div>
     <div class="form-group">
       <label>Descuento habitual (%)</label>
-      <div style="display:flex;align-items:center;gap:10px">
+      <div class="flex-c36754">
         <input type="number" name="descuento_pct" id="inp-desc" step="0.5" min="0" max="100"
                value="{{ proveedor.descuento_pct|int if proveedor and proveedor.descuento_pct else 0 }}"
-               style="max-width:140px" oninput="actualizarEjemplo()">
-        <span style="font-size:14px;color:var(--text-2)">%</span>
+               class="w-a497ea" oninput="actualizarEjemplo()">
+        <span class="tc-7ccbe0">%</span>
       </div>
       <div class="form-hint">Se aplica automáticamente al cargar nuevas facturas de este proveedor.</div>
     </div>
 
-    <div style="background:var(--green-bg);border:1px solid #86efac;border-radius:var(--radius-sm);padding:14px;margin-bottom:16px" id="desc-ejemplo">
-      <div style="font-size:12px;color:#166534;font-weight:600;margin-bottom:6px">Ejemplo con este descuento:</div>
-      <div style="font-size:13px;color:#334155" id="desc-texto">Ingresá un % para ver el ejemplo</div>
+    <div class="mb-6b780d" id="desc-ejemplo">
+      <div class="mb-d19959">Ejemplo con este descuento:</div>
+      <div class="tc-b0cc3b" id="desc-texto">Ingresá un % para ver el ejemplo</div>
     </div>
 
     {% if proveedor and proveedor.descuento_pct and proveedor.descuento_pct > 0 %}
-    <div class="alert alert-success" style="margin-bottom:16px">
+    <div class="alert alert-success" class="mb-16">
       ✅ Este proveedor tiene un descuento del <strong>{{ proveedor.descuento_pct|int }}%</strong> configurado.
     </div>
     {% endif %}
 
     <div class="section-title">Cuentas bancarias</div>
     {% for i in range(1,4) %}
-    <div class="form-row cols2" style="margin-bottom:8px">
-      <div class="form-group" style="margin-bottom:0">
+    <div class="form-row cols2" class="mb-8">
+      <div class="form-group" class="mb-e7ec54">
         <label>Banco {{ i }}</label>
         <input name="banco{{ i }}_nombre"
                value="{{ proveedor['banco'~i~'_nombre'] if proveedor and proveedor['banco'~i~'_nombre'] else '' }}"
                placeholder="Ej: BROU / ITAU / SANTANDER">
       </div>
-      <div class="form-group" style="margin-bottom:0">
+      <div class="form-group" class="mb-e7ec54">
         <label>N° de cuenta</label>
         <input name="banco{{ i }}_cuenta"
                value="{{ proveedor['banco'~i~'_cuenta'] if proveedor and proveedor['banco'~i~'_cuenta'] else '' }}"
@@ -90,9 +90,9 @@
     </div>
     {% endfor %}
 
-    <div style="margin-top:24px;display:flex;gap:10px">
-      <button type="submit" class="btn btn-primary" style="flex:1;min-height:48px">💾 Guardar proveedor</button>
-      <a href="/proveedores" class="btn btn-outline" style="min-height:48px;display:flex;align-items:center">Cancelar</a>
+    <div class="flex-cc3414">
+      <button type="submit" class="btn btn-primary" class="fx-223c2f">💾 Guardar proveedor</button>
+      <a href="/proveedores" class="btn btn-outline" class="flex-5c9a56">Cancelar</a>
     </div>
 
   </form>
@@ -108,7 +108,7 @@ function actualizarEjemplo() {
   el.innerHTML = ejemplos.map(base => {
     const desc = base * pct / 100;
     const neto = base - desc;
-    return `<div style="margin-bottom:3px">Factura <strong>${base.toFixed(2)}</strong> → desc. <span style="color:#dc2626">-${desc.toFixed(2)}</span> → <strong style="color:#16a34a">a pagar: ${neto.toFixed(2)}</strong></div>`;
+    return `<div class="mb-bf903b">Factura <strong>${base.toFixed(2)}</strong> → desc. <span class="clr-bc8099">-${desc.toFixed(2)}</span> → <strong class="clr-deccf9">a pagar: ${neto.toFixed(2)}</strong></div>`;
   }).join('');
 }
 actualizarEjemplo();

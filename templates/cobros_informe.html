@@ -4,44 +4,44 @@
 {% block content %}
  
 <!-- Barra de navegación de semana -->
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+<div class="flex-3875a9">
   <button class="btn btn-outline btn-sm" onclick="cambiarSemana(-1)">◀ Anterior</button>
-  <span id="week-label" style="font-size:14px;font-weight:700;color:#1a3a5c;min-width:200px;text-align:center"></span>
+  <span id="week-label" class="txt-e567ae"></span>
   <button class="btn btn-outline btn-sm" onclick="cambiarSemana(1)">Siguiente ▶</button>
  
-  <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
-    <button class="btn btn-sm" style="background:#e8f5e9;color:#1b5e20;border-color:#a5d6a7;font-weight:600"
+  <div class="flex-e8caa4">
+    <button class="btn btn-sm" class="clr-317bed"
             onclick="exportarExcel()">📊 Excel</button>
-    <button class="btn btn-sm" style="background:#fff8e0;color:#6d4000;border-color:#e0c060;font-weight:600"
+    <button class="btn btn-sm" class="clr-e7c331"
             onclick="generarInformeJefa()">📋 Informe Jefa</button>
-    <button class="btn btn-sm" style="background:#f0f0e8;color:#444;border-color:#ccc"
+    <button class="btn btn-sm" class="clr-b3b61e"
             onclick="abrirConfigHistorial()">⚙️ Historial previo</button>
     <button class="btn btn-outline btn-sm" onclick="window.print()">🖨️ Imprimir / PDF</button>
   </div>
 </div>
  
 <!-- Título y fecha -->
-<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px">
+<div class="flex-879101">
   <div>
-    <h2 style="margin:0;font-size:20px">Informe de Cobros y Pagos</h2>
-    <div id="inf-periodo-label" style="font-size:13px;color:#64748b;margin-top:2px"></div>
+    <h2 class="fs-77f208">Informe de Cobros y Pagos</h2>
+    <div id="inf-periodo-label" class="mt-74b32f"></div>
   </div>
-  <div id="inf-fecha-estado" style="font-size:12px;color:#94a3b8"></div>
+  <div id="inf-fecha-estado" class="tc-59afdf"></div>
 </div>
  
 <!-- Stats resumen -->
-<div id="inf-resumen" class="grid4" style="margin-bottom:24px"></div>
+<div id="inf-resumen" class="grid4" class="mb-37d30b"></div>
  
 <!-- Tabla Cobros -->
-<div style="margin-bottom:24px">
-  <h3 style="color:#166534;margin-bottom:10px">💚 Cobros del período</h3>
-  <div style="overflow-x:auto;border-radius:10px;border:1px solid #e2e8f0">
-    <table style="margin:0">
+<div class="mb-37d30b">
+  <h3 class="mb-18cf5f">💚 Cobros del período</h3>
+  <div class="br-9f0137">
+    <table class="m-0">
       <thead>
-        <tr style="background:#f0fdf4">
+        <tr class="bg-113f3c">
           <th>FECHA</th><th>CLIENTE</th><th>MEDIO</th><th>BANCO</th>
-          <th style="text-align:right">MONTO UYU</th>
-          <th style="text-align:right">MONTO USD</th>
+          <th class="text-right">MONTO UYU</th>
+          <th class="text-right">MONTO USD</th>
           <th>ESTADO</th><th>NOTA</th>
         </tr>
       </thead>
@@ -52,15 +52,15 @@
 </div>
  
 <!-- Tabla Pagos -->
-<div style="margin-bottom:24px">
-  <h3 style="color:#991b1b;margin-bottom:10px">🔴 Pagos del período</h3>
-  <div style="overflow-x:auto;border-radius:10px;border:1px solid #e2e8f0">
-    <table style="margin:0">
+<div class="mb-37d30b">
+  <h3 class="mb-cd4616">🔴 Pagos del período</h3>
+  <div class="br-9f0137">
+    <table class="m-0">
       <thead>
-        <tr style="background:#fff5f5">
+        <tr class="bg-638990">
           <th>FECHA</th><th>PROVEEDOR</th><th>MEDIO</th><th>BANCO</th>
-          <th style="text-align:right">MONTO UYU</th>
-          <th style="text-align:right">MONTO USD</th>
+          <th class="text-right">MONTO UYU</th>
+          <th class="text-right">MONTO USD</th>
           <th>ESTADO</th><th>NOTA</th>
         </tr>
       </thead>
@@ -71,7 +71,7 @@
 </div>
  
 <!-- Neto -->
-<div id="inf-neto-box" style="border:2px solid #e2e8f0;border-radius:10px;padding:18px;background:#f8fafc"></div>
+<div id="inf-neto-box" class="bg-9e6098"></div>
  
 <script>
 let semanaOffset = 0;
@@ -140,24 +140,24 @@ async function renderInforme() {
  
   // Filas
   const filaReg = (r) => `<tr>
-    <td style="white-space:nowrap;font-size:12px;color:#555">${fmtFecha(r.fecha)}</td>
-    <td style="font-weight:500;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.cliente}</td>
-    <td style="font-size:12px;color:#666">${r.medio || '-'}</td>
-    <td style="font-size:12px;color:#666">${r.banco || '-'}</td>
-    <td style="text-align:right;font-family:var(--mono)">${r.moneda === 'UYU' ? '$' + fmtGer(r.monto) : '-'}</td>
-    <td style="text-align:right;font-family:var(--mono)">${r.moneda === 'USD' ? 'U$' + fmtGer(r.monto) : '-'}</td>
-    <td><span style="font-size:11px;font-weight:600;color:${r.estado==='Procesado'?'#16a34a':'#d97706'}">${r.estado}</span></td>
-    <td style="font-size:12px;color:#888;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.nota || '-'}</td>
+    <td class="tc-948cf2">${fmtFecha(r.fecha)}</td>
+    <td class="w-e9f555">${r.cliente}</td>
+    <td class="tc-62d5ee">${r.medio || '-'}</td>
+    <td class="tc-62d5ee">${r.banco || '-'}</td>
+    <td class="ta-6f71c4">${r.moneda === 'UYU' ? '$' + fmtGer(r.monto) : '-'}</td>
+    <td class="ta-6f71c4">${r.moneda === 'USD' ? 'U$' + fmtGer(r.monto) : '-'}</td>
+    <td><span class="txt-40184b">${r.estado}</span></td>
+    <td class="tc-e2ea59">${r.nota || '-'}</td>
   </tr>`;
  
-  const filaTotal = (uyu, usd, label, color) => `<tr style="background:#f8fafc;font-weight:700">
-    <td colspan="4" style="text-align:right;padding-right:12px">${label}</td>
-    <td style="text-align:right;color:${color};font-family:var(--mono)">$${fmtGer(uyu)}</td>
-    <td style="text-align:right;color:${color};font-family:var(--mono)">U$${fmtGer(usd)}</td>
+  const filaTotal = (uyu, usd, label, color) => `<tr class="bg-f5ea1d">
+    <td colspan="4" class="pad-a931e0">${label}</td>
+    <td class="clr-f1b3a4">$${fmtGer(uyu)}</td>
+    <td class="clr-f1b3a4">U$${fmtGer(usd)}</td>
     <td colspan="2"></td>
   </tr>`;
  
-  const vacio = (msg) => `<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:20px">${msg}</td></tr>`;
+  const vacio = (msg) => `<tr><td colspan="8" class="pad-bfb34b">${msg}</td></tr>`;
  
   document.getElementById('tbody-cobros-inf').innerHTML = cobros.length ? cobros.map(filaReg).join('') : vacio('Sin cobros en este período');
   document.getElementById('tfoot-cobros-inf').innerHTML = cobros.length ? filaTotal(totCobUYU, totCobUSD, 'TOTAL COBROS', '#16a34a') : '';
@@ -165,14 +165,14 @@ async function renderInforme() {
   document.getElementById('tfoot-pagos-inf').innerHTML  = pagos.length  ? filaTotal(totPagUYU, totPagUSD, 'TOTAL PAGOS', '#dc2626') : '';
  
   document.getElementById('inf-neto-box').innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="gap-990b13">
       <div>
-        <div style="font-size:11px;color:#64748b;text-transform:uppercase;font-weight:700;margin-bottom:4px">Resultado neto UYU</div>
-        <div style="font-size:22px;font-weight:700;color:${netoUYU>=0?'#166534':'#991b1b'}">${netoUYU>=0?'+ ':''} $${fmtGer(Math.abs(netoUYU))}</div>
+        <div class="mb-d87535">Resultado neto UYU</div>
+        <div class="txt-b56e55">${netoUYU>=0?'+ ':''} $${fmtGer(Math.abs(netoUYU))}</div>
       </div>
       <div>
-        <div style="font-size:11px;color:#64748b;text-transform:uppercase;font-weight:700;margin-bottom:4px">Resultado neto USD</div>
-        <div style="font-size:22px;font-weight:700;color:${netoUSD>=0?'#166534':'#991b1b'}">${netoUSD>=0?'+ ':''}U$${fmtGer(Math.abs(netoUSD))}</div>
+        <div class="mb-d87535">Resultado neto USD</div>
+        <div class="txt-8b3e3f">${netoUSD>=0?'+ ':''}U$${fmtGer(Math.abs(netoUSD))}</div>
       </div>
     </div>`;
 }
@@ -255,17 +255,17 @@ function abrirConfigHistorial() {
   const deuTxt = Object.keys(h.deu).sort().map(k => k+'\t'+h.deu[k].uyu+'\t'+h.deu[k].usd).join('\n');
   const modal = document.createElement('div');
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;display:flex;align-items:center;justify-content:center;padding:1rem;';
-  modal.innerHTML = `<div style="background:#fff;border-radius:12px;padding:1.5rem;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.2);">
-    <h2 style="font-size:16px;font-weight:700;margin-bottom:6px">Historial previo del informe</h2>
-    <p style="font-size:12px;color:#666;margin-bottom:14px;line-height:1.6">Pegá las filas históricas. Formato: <code style="background:#f0f0e8;padding:1px 4px;border-radius:3px">FECHA&nbsp;&nbsp;UYU&nbsp;&nbsp;USD</code> (separado por TAB). Fechas en <strong>YYYYMMDD</strong>.</p>
-    <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#666">Acreedores (Pagos históricos)</label>
-    <textarea id="hist-acr-input" style="width:100%;height:120px;font-family:monospace;font-size:12px;padding:8px;border:1px solid #ccc;border-radius:6px;margin:4px 0 12px;resize:vertical;box-sizing:border-box" placeholder="20260123&#9;-45553764&#9;-4748977">${acrTxt}</textarea>
-    <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#666">Deudores (Cobros históricos)</label>
-    <textarea id="hist-deu-input" style="width:100%;height:120px;font-family:monospace;font-size:12px;padding:8px;border:1px solid #ccc;border-radius:6px;margin:4px 0 12px;resize:vertical;box-sizing:border-box" placeholder="20260116&#9;32409504&#9;8196">${deuTxt}</textarea>
-    <p style="font-size:11px;color:#888;margin-bottom:14px">💡 Tip: copiá las columnas desde Excel y pegualas acá — el separador de TAB funciona perfecto.</p>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button onclick="this.closest('div').parentElement.remove()" style="padding:8px 14px;border:1px solid #ccc;border-radius:7px;background:#fff;cursor:pointer;font-size:13px">Cancelar</button>
-      <button onclick="guardarHistPrevio()" style="padding:8px 14px;border:none;border-radius:7px;background:#1a3a5c;color:#fff;cursor:pointer;font-size:13px;font-weight:700">Guardar historial</button>
+  modal.innerHTML = `<div class="bg-80d9a1">
+    <h2 class="mb-91784b">Historial previo del informe</h2>
+    <p class="mb-5b5131">Pegá las filas históricas. Formato: <code class="bg-e03468">FECHA&nbsp;&nbsp;UYU&nbsp;&nbsp;USD</code> (separado por TAB). Fechas en <strong>YYYYMMDD</strong>.</p>
+    <label class="txt-887a86">Acreedores (Pagos históricos)</label>
+    <textarea id="hist-acr-input" class="fs-dccfa4" placeholder="20260123&#9;-45553764&#9;-4748977">${acrTxt}</textarea>
+    <label class="txt-887a86">Deudores (Cobros históricos)</label>
+    <textarea id="hist-deu-input" class="fs-dccfa4" placeholder="20260116&#9;32409504&#9;8196">${deuTxt}</textarea>
+    <p class="mb-ca8db2">💡 Tip: copiá las columnas desde Excel y pegualas acá — el separador de TAB funciona perfecto.</p>
+    <div class="flex-116a79">
+      <button onclick="this.closest('div').parentElement.remove()" class="bg-80fb0d">Cancelar</button>
+      <button onclick="guardarHistPrevio()" class="bg-fe7d96">Guardar historial</button>
     </div>
   </div>`;
   document.body.appendChild(modal);
@@ -335,23 +335,23 @@ async function generarInformeJefa() {
   const estiloTabla = 'border-collapse:collapse;width:auto;min-width:400px;margin-bottom:8px;font-family:Arial,sans-serif;';
  
   const filasAcr = acrKeys.map(k =>
-    `<tr><td style="${estiloTd1}">${k}</td><td style="${estiloTd}">-${fmtNum(acrMap[k].uyu)}</td><td style="${estiloTd}">-${fmtNum(acrMap[k].usd)}</td></tr>`
-  ).join('') || `<tr><td colspan="3" style="${estiloTd}color:#999">Sin datos</td></tr>`;
+    `<tr><td class="st-685767">${k}</td><td class="st-20031d">-${fmtNum(acrMap[k].uyu)}</td><td class="st-20031d">-${fmtNum(acrMap[k].usd)}</td></tr>`
+  ).join('') || `<tr><td colspan="3" class="clr-8f4da5">Sin datos</td></tr>`;
   const filasDeu = deuKeys.map(k =>
-    `<tr><td style="${estiloTd1}">${k}</td><td style="${estiloTd}">${fmtNum(deuMap[k].uyu)}</td><td style="${estiloTd}">${fmtNum(deuMap[k].usd)}</td></tr>`
-  ).join('') || `<tr><td colspan="3" style="${estiloTd}color:#999">Sin datos</td></tr>`;
+    `<tr><td class="st-685767">${k}</td><td class="st-20031d">${fmtNum(deuMap[k].uyu)}</td><td class="st-20031d">${fmtNum(deuMap[k].usd)}</td></tr>`
+  ).join('') || `<tr><td colspan="3" class="clr-8f4da5">Sin datos</td></tr>`;
  
-  const contenidoHTML = `<div style="font-family:Arial,sans-serif;">
-<h2 style="font-size:18px;font-weight:bold;margin:0 0 4px">Informe de Deudores y Acreedores</h2>
-<div style="font-size:13px;margin-bottom:16px;color:#333">Estado al ${hoy}</div>
-<h3 style="font-size:14px;font-weight:bold;margin:16px 0 6px">Acreedores</h3>
-<table style="${estiloTabla}"><tbody>
-  <tr><th style="${estiloTh}">FECHA</th><th style="${estiloTh}">Acreedores UYU</th><th style="${estiloTh}">Acreedores USD</th></tr>
+  const contenidoHTML = `<div class="ff-0acc38">
+<h2 class="fs-e9a67f">Informe de Deudores y Acreedores</h2>
+<div class="mb-6b7b25">Estado al ${hoy}</div>
+<h3 class="fs-253f2f">Acreedores</h3>
+<table class="st-645a59"><tbody>
+  <tr><th class="st-e0b67e">FECHA</th><th class="st-e0b67e">Acreedores UYU</th><th class="st-e0b67e">Acreedores USD</th></tr>
   ${filasAcr}
 </tbody></table>
-<h3 style="font-size:14px;font-weight:bold;margin:16px 0 6px">Deudores</h3>
-<table style="${estiloTabla}"><tbody>
-  <tr><th style="${estiloTh}">FECHA</th><th style="${estiloTh}">Deudores UYU</th><th style="${estiloTh}">Deudores USD</th></tr>
+<h3 class="fs-253f2f">Deudores</h3>
+<table class="st-645a59"><tbody>
+  <tr><th class="st-e0b67e">FECHA</th><th class="st-e0b67e">Deudores UYU</th><th class="st-e0b67e">Deudores USD</th></tr>
   ${filasDeu}
 </tbody></table>
 </div>`;

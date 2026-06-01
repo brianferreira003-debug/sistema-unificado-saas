@@ -3,10 +3,10 @@
 {% block page_title %}{% if factura %}Editar factura{% else %}Nueva factura{% endif %}{% endblock %}
 {% block content %}
 
-<div style="max-width:700px;margin:0 auto">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-    <h1 style="margin:0">{% if factura %}Editar factura{% else %}Nueva factura{% endif %}</h1>
-    <a href="/facturas" class="btn btn-outline btn-sm" style="min-height:36px">← Volver</a>
+<div class="w-93387f">
+  <div class="flex-08db7b">
+    <h1 class="m-0">{% if factura %}Editar factura{% else %}Nueva factura{% endif %}</h1>
+    <a href="/facturas" class="btn btn-outline btn-sm" class="st-181b43">← Volver</a>
   </div>
 
   <div class="card">
@@ -59,7 +59,7 @@
         <input type="number" step="0.01" min="0" name="importe" required
                placeholder="0.00"
                value="{{ factura.importe if factura else request.form.get('importe','') }}"
-               style="font-size:18px;font-weight:700;font-family:var(--mono)">
+               class="fs-09b23a">
       </div>
       <div class="form-group">
         <label>Moneda</label>
@@ -112,11 +112,11 @@
              value="{{ factura.nota if factura else '' }}">
     </div>
 
-    <div style="margin-top:24px;display:flex;gap:10px">
-      <button type="submit" class="btn btn-primary" style="flex:1;min-height:48px">
+    <div class="flex-cc3414">
+      <button type="submit" class="btn btn-primary" class="fx-223c2f">
         {% if factura %}💾 Guardar cambios{% else %}✅ Crear factura{% endif %}
       </button>
-      <a href="/facturas" class="btn btn-outline" style="min-height:48px;display:flex;align-items:center">Cancelar</a>
+      <a href="/facturas" class="btn btn-outline" class="flex-5c9a56">Cancelar</a>
     </div>
 
   </form>

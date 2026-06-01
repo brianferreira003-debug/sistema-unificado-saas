@@ -5,9 +5,9 @@
   <h1>Historial de pagos</h1>
 </div>
 
-<div class="card" style="margin-bottom:20px">
-  <form method="get" style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap">
-    <div class="form-group" style="margin:0;flex:1;min-width:200px">
+<div class="card" class="mb-20">
+  <form method="get" class="flex-eb1f02">
+    <div class="form-group" class="w-923490">
       <label>Filtrar por proveedor</label>
       <select name="proveedor_id" onchange="this.form.submit()">
         <option value="">Todos los proveedores</option>
@@ -16,55 +16,55 @@
         {% endfor %}
       </select>
     </div>
-    <a href="/pagos" class="btn btn-outline" style="margin-bottom:1px">Ver todos</a>
+    <a href="/pagos" class="btn btn-outline" class="mb-c167dd">Ver todos</a>
   </form>
 </div>
 
-<div class="search-bar" style="margin-bottom:16px">
+<div class="search-bar" class="mb-16">
   <span class="search-icon">🔍</span>
   <input type="text" id="buscar-pagos" placeholder="Buscar por proveedor, factura, fecha, importe...">
   <button class="search-clear">✕</button>
 </div>
-<div style="font-size:12px;color:#64748b;margin-top:-12px;margin-bottom:12px" id="buscar-pagos-count"></div>
+<div class="mb-0e11b4" id="buscar-pagos-count"></div>
 {% if not grupos %}
 <div class="alert-box warning">No hay pagos registrados aún.</div>
 {% else %}
 
 {% for key, grupo in grupos.items() %}
 {% set info = grupo.info %}
-<div class="card pago-card" style="padding:0;overflow:hidden;margin-bottom:18px">
+<div class="card pago-card" class="mb-0aa207">
   <!-- Header del pago -->
-  <div style="background:#16a34a;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-      <span style="font-weight:700;font-size:15px">{{ info.proveedor_nombre }}</span>
-      <span style="font-size:13px;opacity:.9;background:rgba(0,0,0,.15);padding:2px 10px;border-radius:12px">{{ info.fecha_pago }}</span>
+  <div class="flex-4e52a3">
+    <div class="flex-041960">
+      <span class="fs-6bd33a">{{ info.proveedor_nombre }}</span>
+      <span class="bg-ef6f64">{{ info.fecha_pago }}</span>
       {% if info.referencia %}
-      <span style="font-size:12px;background:rgba(255,255,255,.2);padding:2px 10px;border-radius:12px">Ref: {{ info.referencia }}</span>
+      <span class="bg-9cbbe8">Ref: {{ info.referencia }}</span>
       {% endif %}
     </div>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <span style="font-size:17px;font-weight:800;background:rgba(0,0,0,.15);padding:4px 14px;border-radius:8px">
+    <div class="flex-72fafc">
+      <span class="bg-4fb544">
         {{ "%.2f"|format(grupo.total) }} {{ info.moneda }}
       </span>
       {% if info.comprobante %}
       <a href="{{ info.comprobante }}" target="_blank"
-         style="background:#fff;color:#16a34a;border:none;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px">
+         class="bg-a7bbcd">
         📄 Comprobante
       </a>
       {% endif %}
       <a href="/pagos/{{ info.id }}/mail"
-         style="background:#1a3a5c;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px">
+         class="bg-215a2c">
         ✉️ Enviar mail
       </a>
       <a href="/pagos/{{ info.id }}/editar"
-         style="background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.4);padding:6px 14px;border-radius:6px;font-size:12px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px">
+         class="bg-c45c5a">
         ✏️ Editar
       </a>
     </div>
   </div>
 
   <!-- Tabla de facturas -->
-  <div style="padding:0">
+  <div class="p-0">
     <table>
       <thead><tr>
         <th>N° Factura</th><th>Fecha</th><th>Importe original</th><th>Moneda</th><th>Pagado</th><th></th>
@@ -72,25 +72,25 @@
       <tbody>
       {% for f in grupo.facturas %}
       <tr>
-        <td style="font-weight:500">{{ f.factura_numero }}</td>
+        <td class="fw-1e29ee">{{ f.factura_numero }}</td>
         <td>{{ f.factura_fecha }}</td>
         <td>{{ "%.2f"|format(f.factura_importe) }}</td>
         <td><span class="{% if f.moneda=='USD' %}moneda-usd{% else %}moneda-uyu{% endif %}">{{ f.moneda }}</span></td>
         <td><strong>{{ "%.2f"|format(f.importe_pagado) }}</strong></td>
-        <td style="text-align:right;white-space:nowrap">
+        <td class="ta-7783fd">
           <a href="/pagos/{{ f.id }}/editar" class="btn btn-outline btn-sm" title="Editar">✏️</a>
-          <form method="post" action="/pagos/{{ f.id }}/revertir" style="display:inline"
+          <form method="post" action="/pagos/{{ f.id }}/revertir" class="d-inline"
                 onsubmit="return confirm('¿Revertir este pago? La factura volverá a Pendiente.')">
             <button type="submit" class="btn btn-sm"
-                    style="background:#fff5f5;color:#dc2626;border:1px solid #fecaca"
+                    class="clr-a5be31"
                     title="Revertir — vuelve a Pendiente">↩️</button>
           </form>
         </td>
       </tr>
       {% endfor %}
-      <tr style="background:#f0fdf4">
-        <td colspan="4" style="text-align:right;font-weight:700;color:#166534">Total pagado</td>
-        <td><strong style="color:#166534">{{ "%.2f"|format(grupo.total) }} {{ info.moneda }}</strong></td>
+      <tr class="bg-113f3c">
+        <td colspan="4" class="clr-6fbb05">Total pagado</td>
+        <td><strong class="clr-16cde0">{{ "%.2f"|format(grupo.total) }} {{ info.moneda }}</strong></td>
         <td></td>
       </tr>
       </tbody>
@@ -98,7 +98,7 @@
   </div>
 
   {% if info.nota %}
-  <div style="padding:10px 18px;font-size:12px;color:#64748b;border-top:1px solid #eef1f6;background:#fafbfc">
+  <div class="bg-d89707">
     📝 {{ info.nota }}
   </div>
   {% endif %}

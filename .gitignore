@@ -18,6 +18,17 @@ oauth_client.json
 oauth_token.json
 gestion-comprobantes-*.json
 
+# Certificados y claves (NUNCA subir)
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Backups y dumps (NUNCA subir)
+*.sql.gz
+*.dump
+*.bak
+
 # Base de datos (NUNCA subir datos reales)
 *.db
 data/

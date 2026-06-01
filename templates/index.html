@@ -6,10 +6,10 @@
 <!-- ═══ PROVEEDORES ═══ -->
 <div class="section-header">
   <span class="section-label">Proveedores</span>
-  <a href="/informe" style="font-size:12px;color:var(--accent);font-weight:600">Ver informe →</a>
+  <a href="/informe" class="txt-e4357a">Ver informe →</a>
 </div>
 
-<div class="kpi-grid cols2" style="margin-bottom:8px">
+<div class="kpi-grid cols2" class="mb-8">
   <div class="kpi">
     <div class="kpi-accent-bar accent"></div>
     <div class="kpi-label">Deuda USD</div>
@@ -24,7 +24,7 @@
   </div>
 </div>
 
-<div class="kpi-grid cols2" style="margin-bottom:20px">
+<div class="kpi-grid cols2" class="mb-20">
   <div class="kpi">
     <div class="kpi-accent-bar {% if resumen.vencidas > 0 %}red{% else %}green{% endif %}"></div>
     <div class="kpi-label">Vencidas</div>
@@ -42,10 +42,10 @@
 <!-- ═══ COBROS Y PAGOS — ESTE MES ═══ -->
 <div class="section-header">
   <span class="section-label">Cobros y Pagos — este mes</span>
-  <a href="/cobros-pagos/informe" style="font-size:12px;color:var(--accent);font-weight:600">Ver todo →</a>
+  <a href="/cobros-pagos/informe" class="txt-e4357a">Ver todo →</a>
 </div>
 
-<div class="kpi-grid cols2" style="margin-bottom:8px">
+<div class="kpi-grid cols2" class="mb-8">
   <div class="kpi">
     <div class="kpi-accent-bar green"></div>
     <div class="kpi-label">Cobrado</div>
@@ -60,12 +60,13 @@
   </div>
 </div>
 
-<div style="margin-bottom:24px">
+<div class="mb-37d30b">
+  {# CSIO-OK: dynamic Jinja - cannot be externalized #}
   <div class="kpi" style="border-left:3px solid {% if resumen.cp_pendientes > 0 %}var(--amber){% else %}var(--green){% endif %}">
-    <div style="display:flex;align-items:center;justify-content:space-between">
+    <div class="flex-fb4d82">
       <div>
         <div class="kpi-label">CP Pendientes</div>
-        <div class="kpi-value {% if resumen.cp_pendientes > 0 %}amber{% else %}green{% endif %}" style="font-size:28px">{{ resumen.cp_pendientes }}</div>
+        <div class="kpi-value {% if resumen.cp_pendientes > 0 %}amber{% else %}green{% endif %}" class="fs-28">{{ resumen.cp_pendientes }}</div>
         <div class="kpi-sub">sin procesar</div>
       </div>
       <a href="/cobros-pagos" class="btn btn-primary btn-sm">Registrar</a>
@@ -82,21 +83,21 @@
 </div>
 
 {% if alertas %}
-<div class="mobile-card-list" style="margin-bottom:16px">
+<div class="mobile-card-list" class="mb-16">
   {% for f in alertas %}
   {% set dias = f.dias|int %}
   <div class="mobile-card">
     <div class="mobile-card-header">
       <div>
         <div class="mobile-card-title">{{ f.proveedor_nombre }}</div>
-        <div class="mobile-card-sub" style="font-family:var(--mono)">{{ f.numero }}</div>
+        <div class="mobile-card-sub" class="ff-6ccd80">{{ f.numero }}</div>
       </div>
-      <div style="text-align:right">
-        <div style="font-family:var(--mono);font-weight:700;font-size:15px">
+      <div class="text-right">
+        <div class="fs-994abd">
           {{ "%.2f"|format(f.importe) }}
-          <span class="{% if f.moneda=='USD' %}moneda-usd{% else %}moneda-uyu{% endif %}" style="font-size:11px">{{ f.moneda }}</span>
+          <span class="{% if f.moneda=='USD' %}moneda-usd{% else %}moneda-uyu{% endif %}" class="fs-11">{{ f.moneda }}</span>
         </div>
-        <div style="margin-top:4px">
+        <div class="mt-4">
           {% if dias < 0 %}
           <span class="badge badge-red">{{ dias|abs }}d venc.</span>
           {% elif dias == 0 %}
@@ -104,32 +105,32 @@
           {% else %}
           <span class="badge badge-yellow">{{ días }}d</span>
           {% endif %}
-          <span style="font-size:11px;color:var(--text-3);margin-left:4px">{{ f.fecha_vencimiento }}</span>
+          <span class="tc-feafa2">{{ f.fecha_vencimiento }}</span>
         </div>
       </div>
     </div>
     <div class="mobile-card-actions">
-      <a href="/facturas/{{ f.id }}/pagar" class="btn btn-success btn-sm" style="flex:1">Pagar</a>
+      <a href="/facturas/{{ f.id }}/pagar" class="btn btn-success btn-sm" class="fx-da5cd6">Pagar</a>
       <a href="/facturas/{{ f.id }}" class="btn btn-outline btn-sm">Ver</a>
     </div>
   </div>
   {% endfor %}
 </div>
-<div style="display:flex;gap:8px;margin-bottom:24px">
-  <a href="/informe" class="btn btn-outline btn-sm" style="flex:1">📊 Informe completo</a>
-  <a href="/informe/exportar" class="btn btn-outline btn-sm" style="flex:1">⬇️ Excel</a>
+<div class="flex-f9a10f">
+  <a href="/informe" class="btn btn-outline btn-sm" class="fx-da5cd6">📊 Informe completo</a>
+  <a href="/informe/exportar" class="btn btn-outline btn-sm" class="flex-1">⬇️ Excel</a>
 </div>
 {% else %}
-<div class="card" style="text-align:center;padding:24px;margin-bottom:20px">
-  <div style="font-size:28px;margin-bottom:6px">✅</div>
-  <div style="font-size:13px;color:var(--text-3)">Sin facturas por vencer en los próximos 7 días</div>
+<div class="card" class="mb-e4e2b7">
+  <div class="mb-c34034">✅</div>
+  <div class="tc-09665f">Sin facturas por vencer en los próximos 7 días</div>
 </div>
 {% endif %}
 
 <!-- ═══ ÚLTIMOS MOVIMIENTOS ═══ -->
 <div class="section-header">
   <span class="section-label">Últimos movimientos</span>
-  <a href="/cobros-pagos/historial" style="font-size:12px;color:var(--accent);font-weight:600">Historial →</a>
+  <a href="/cobros-pagos/historial" class="txt-e4357a">Historial →</a>
 </div>
 
 {% if cp_recientes %}
@@ -141,18 +142,19 @@
         <div class="mobile-card-title">{{ r.cliente }}</div>
         <div class="mobile-card-sub">{{ r.fecha }} · {{ r.banco or r.medio }}</div>
       </div>
-      <div style="text-align:right">
+      <div class="text-right">
+        {# CSIO-OK: dynamic Jinja - cannot be externalized #}
         <div style="font-family:var(--mono);font-weight:700;font-size:15px;color:{% if r.tipo=='Cobro' %}var(--green){% else %}var(--red){% endif %}">
           <span class="{% if r.moneda=='USD' %}moneda-usd{% else %}moneda-uyu{% endif %}">{{ r.moneda }}</span>
           {{ "%.2f"|format(r.monto) }}
         </div>
-        <div style="margin-top:4px">
+        <div class="mt-4">
           {% if r.tipo=='Cobro' %}
           <span class="badge badge-green">Cobro</span>
           {% else %}
           <span class="badge badge-orange">Pago</span>
           {% endif %}
-          <span class="badge {% if r.estado=='Procesado' %}badge-green{% else %}badge-yellow{% endif %}" style="font-size:10px">{{ r.estado }}</span>
+          <span class="badge {% if r.estado=='Procesado' %}badge-green{% else %}badge-yellow{% endif %}" class="fs-10">{{ r.estado }}</span>
         </div>
       </div>
     </div>
@@ -160,9 +162,9 @@
   {% endfor %}
 </div>
 {% else %}
-<div class="card" style="text-align:center;padding:24px">
-  <div style="font-size:28px;margin-bottom:6px">📭</div>
-  <div style="font-size:13px;color:var(--text-3)">Sin movimientos registrados aún</div>
+<div class="card" class="pad-4cc191">
+  <div class="mb-c34034">📭</div>
+  <div class="tc-09665f">Sin movimientos registrados aún</div>
 </div>
 {% endif %}
 

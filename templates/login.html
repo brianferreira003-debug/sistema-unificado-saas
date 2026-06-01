@@ -3,19 +3,18 @@
 {% block page_title %}Iniciar sesión{% endblock %}
 {% block content %}
 
-<!-- Hide bottom nav on login -->
-<style>.bottom-nav{display:none!important}</style>
+{% block body_class %}hide-bottom-nav{% endblock %}
 
-<div style="max-width:400px;margin:40px auto 0;padding:0 16px">
-  <div class="card" style="padding:32px 24px;border-radius:20px">
-    <div style="text-align:center;margin-bottom:28px">
-      <div style="width:56px;height:56px;background:var(--accent-bg);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px">🔐</div>
-      <h1 style="font-size:22px;margin-bottom:6px">Sistema de Gestión</h1>
-      <p style="font-size:13px;color:var(--text-3)">Ingresá tus credenciales</p>
+<div class="pad-8eeae5">
+  <div class="card" class="pad-7937be">
+    <div class="mb-d592e9">
+      <div class="flex-8c6208">🔐</div>
+      <h1 class="mb-1c7b5e">Sistema de Gestión</h1>
+      <p class="tc-09665f">Ingresá tus credenciales</p>
     </div>
 
     {% if error %}
-    <div class="alert alert-danger" style="margin-bottom:16px">
+    <div class="alert alert-danger" class="mb-16">
       ⚠️ {{ error }}
     </div>
     {% endif %}
@@ -23,7 +22,7 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
-        <div class="alert alert-{{ category }}" style="margin-bottom:16px">{{ message }}</div>
+        <div class="alert alert-{{ category }}" class="mb-16">{{ message }}</div>
         {% endfor %}
       {% endif %}
     {% endwith %}
@@ -38,12 +37,12 @@
         <label>Contraseña</label>
         <input type="password" name="password" required placeholder="Tu contraseña">
       </div>
-      <button type="submit" class="btn btn-primary btn-block" style="height:50px;font-size:16px;margin-top:12px">
+      <button type="submit" class="btn btn-primary btn-block" class="mt-3b93e7">
         Ingresar
       </button>
     </form>
   </div>
-  <div style="text-align:center;margin-top:16px;font-size:12px;color:var(--text-3)">
+  <div class="mt-56e546">
     Sistema Unificado v3.0 · SaaS
   </div>
 </div>

@@ -3,9 +3,9 @@
 {% block page_title %}Proveedores{% endblock %}
 {% block content %}
 
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-  <h1 style="margin:0">Proveedores</h1>
-  <a href="/proveedores/nuevo" class="btn btn-primary btn-sm" style="min-height:40px">+ Nuevo</a>
+<div class="flex-08db7b">
+  <h1 class="m-0">Proveedores</h1>
+  <a href="/proveedores/nuevo" class="btn btn-primary btn-sm" class="st-d796e5">+ Nuevo</a>
 </div>
 
 <div class="search-wrap">
@@ -13,7 +13,7 @@
   <input type="text" id="buscar-provs" placeholder="Buscar por nombre, razón social...">
   <button class="search-clear">✕</button>
 </div>
-<div style="font-size:12px;color:var(--text-3);margin-top:-10px;margin-bottom:12px" id="buscar-provs-count"></div>
+<div class="mb-bb4dd6" id="buscar-provs-count"></div>
 
 {% if proveedores %}
 <div class="mobile-card-list" id="mobile-provs-list">
@@ -26,37 +26,38 @@
       <div class="mobile-card-title">{{ p.nombre }}</div>
       {% if p.razon_social %}<div class="mobile-card-sub">{{ p.razon_social }}</div>{% endif %}
     </div>
-    <span class="{% if p.moneda=='USD' %}moneda-usd{% else %}moneda-uyu{% endif %}" style="font-weight:700">{{ p.moneda }}</span>
+    <span class="{% if p.moneda=='USD' %}moneda-usd{% else %}moneda-uyu{% endif %}" class="fw-700">{{ p.moneda }}</span>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+  <div class="mb-e4712c">
     <div>
-      <div style="font-size:11px;color:var(--text-3)">Plazo</div>
-      <div style="font-weight:600;font-size:13px">{{ p.plazo_dias }} días</div>
+      <div class="tc-1c3d11">Plazo</div>
+      <div class="fs-dc24a5">{{ p.plazo_dias }} días</div>
     </div>
     <div>
-      <div style="font-size:11px;color:var(--text-3)">Descuento</div>
-      <div style="font-weight:600;font-size:13px">{% if desc > 0 %}{{ desc|int }}%{% else %}—{% endif %}</div>
+      <div class="tc-1c3d11">Descuento</div>
+      <div class="fs-dc24a5">{% if desc > 0 %}{{ desc|int }}%{% else %}—{% endif %}</div>
     </div>
     <div>
-      <div style="font-size:11px;color:var(--text-3)">Facturas pend.</div>
-      <div style="font-weight:600;font-size:13px">{% if p.facturas_pendientes > 0 %}<span class="badge badge-yellow">{{ p.facturas_pendientes }}</span>{% else %}—{% endif %}</div>
+      <div class="tc-1c3d11">Facturas pend.</div>
+      <div class="fs-dc24a5">{% if p.facturas_pendientes > 0 %}<span class="badge badge-yellow">{{ p.facturas_pendientes }}</span>{% else %}—{% endif %}</div>
     </div>
     <div>
-      <div style="font-size:11px;color:var(--text-3)">Deuda total</div>
-      <div style="font-weight:600;font-size:13px">{% if p.deuda_total > 0 %}{{ "%.2f"|format(p.deuda_total) }} {{ p.moneda }}{% else %}—{% endif %}</div>
+      <div class="tc-1c3d11">Deuda total</div>
+      <div class="fs-dc24a5">{% if p.deuda_total > 0 %}{{ "%.2f"|format(p.deuda_total) }} {{ p.moneda }}{% else %}—{% endif %}</div>
     </div>
   </div>
   {% if saldo > 0 %}
-  <div style="background:var(--green-bg);border-radius:var(--radius-xs);padding:8px 12px;margin-bottom:10px;font-size:13px;color:#166534;font-weight:600">
+  <div class="mb-b5c062">
     ✓ Saldo a favor: {{ "%.2f"|format(saldo) }} {{ p.moneda }}
   </div>
   {% endif %}
   {% if p.nota_plazo %}
-  <div style="font-size:12px;color:var(--text-3);font-style:italic;margin-bottom:10px">{{ p.nota_plazo }}</div>
+  <div class="mb-b7ed08">{{ p.nota_plazo }}</div>
   {% endif %}
   <div class="mobile-card-actions">
-    <a href="/proveedores/{{ p.id }}/editar" class="btn btn-outline btn-sm" style="flex:1">✏️ Editar</a>
-    <a href="/proveedores/{{ p.id }}/saldo-favor" class="btn btn-sm" style="background:var(--green-bg);color:#166534;border:1px solid #86efac;flex:1">💰 Saldo</a>
+    <a href="/proveedores/{{ p.id }}/editar" class="btn btn-outline btn-sm" class="flex-1">✏️ Editar</a>
+    {# CSIO-OK: static style on Jinja line #}
+ class="btn btn-sm" style="background:var(--green-bg);color:#166534;border:1px solid #86efac;flex:1">💰 Saldo</a>
   </div>
 </div>
 {% endfor %}

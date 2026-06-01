@@ -3,9 +3,9 @@
 {% block page_title %}Editar pago{% endblock %}
 {% block content %}
 
-<div style="max-width:600px;margin:0 auto">
+<div class="w-f034b0">
 
-  <div class="alert alert-info" style="margin-bottom:16px">
+  <div class="alert alert-info" class="mb-16">
     Editando pago de <strong>{{ pago.proveedor_nombre }}</strong> —
     Factura <strong>{{ pago.factura_numero }}</strong>
     (importe original: <strong>{{ "%.2f"|format(pago.factura_importe) }} {{ pago.moneda }}</strong>)
@@ -22,7 +22,7 @@
         <label>Importe pagado *</label>
         <input type="number" name="importe_pagado" step="0.01"
                value="{{ pago.importe_pagado }}" required
-               style="font-size:18px;font-weight:700;font-family:var(--mono)">
+               class="fs-09b23a">
         <div class="form-hint">Importe original de la factura: {{ "%.2f"|format(pago.factura_importe) }}</div>
       </div>
     </div>
@@ -44,24 +44,24 @@
       <textarea name="nota" rows="2">{{ pago.nota or '' }}</textarea>
     </div>
 
-    <div style="display:flex;gap:10px;margin-top:8px">
-      <button type="submit" class="btn btn-primary" style="flex:1;min-height:48px">💾 Guardar cambios</button>
-      <a href="/pagos" class="btn btn-outline" style="min-height:48px;display:flex;align-items:center">Cancelar</a>
+    <div class="flex-8506c0">
+      <button type="submit" class="btn btn-primary" class="fx-223c2f">💾 Guardar cambios</button>
+      <a href="/pagos" class="btn btn-outline" class="flex-5c9a56">Cancelar</a>
     </div>
   </form>
   </div>
 
   <!-- Revertir pago -->
-  <div class="card" style="margin-top:16px;border-color:#fecaca;background:#fff5f5">
-    <div style="font-weight:700;color:#991b1b;margin-bottom:8px">⚠️ Zona de peligro</div>
-    <p style="font-size:13px;color:#7f1d1d;margin-bottom:14px">
+  <div class="card" class="mt-713300">
+    <div class="mb-e1b9aa">⚠️ Zona de peligro</div>
+    <p class="mb-4e803d">
       Revertir este pago eliminará el registro y devolverá la factura
       <strong>{{ pago.factura_numero }}</strong> al estado <strong>Pendiente</strong>.
       Esto no se puede deshacer.
     </p>
     <form method="post" action="/pagos/{{ pago.id }}/revertir"
           onsubmit="return confirm('¿Seguro que querés revertir este pago? La factura volverá a Pendiente.')">
-      <button type="submit" class="btn btn-danger btn-block" style="min-height:44px">↩️ Revertir pago y volver a Pendiente</button>
+      <button type="submit" class="btn btn-danger btn-block" class="st-4f2195">↩️ Revertir pago y volver a Pendiente</button>
     </form>
   </div>
 </div>

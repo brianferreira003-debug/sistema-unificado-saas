@@ -2,63 +2,63 @@
 {% block title %}Backup{% endblock %}
 {% block page_title %}💾 Backup{% endblock %}
 {% block content %}
-<div style="max-width:620px">
+<div class="mw-620">
 
 {% if error %}
-<div class="alert danger" style="margin-bottom:16px">{{ error }}</div>
+<div class="alert danger" class="mb-16">{{ error }}</div>
 {% endif %}
 
 <!-- Stats -->
-<div class="grid4" style="margin-bottom:20px">
+<div class="grid4" class="mb-20">
   <div class="stat"><div class="label">Proveedores</div><div class="value">{{ n_provs }}</div></div>
   <div class="stat"><div class="label">Facturas</div><div class="value">{{ n_facturas }}</div></div>
   <div class="stat"><div class="label">Pagos</div><div class="value">{{ n_pagos }}</div></div>
-  <div class="stat"><div class="label">Tamaño DB</div><div class="value" style="font-size:16px">{{ db_size }} KB</div></div>
+  <div class="stat"><div class="label">Tamaño DB</div><div class="value" class="fs-16">{{ db_size }} KB</div></div>
 </div>
 
 <!-- Download backup -->
-<div class="card" style="margin-bottom:16px">
+<div class="card" class="mb-16">
   <h2>⬇️ Descargar backup</h2>
-  <p style="font-size:13px;color:var(--text-2);margin:8px 0 14px;line-height:1.6">
+  <p class="tc-0422ba">
     Descarga una copia completa de la base de datos. Guardala en tu PC o Google Drive.
   </p>
   <a href="/backup/descargar" class="btn btn-primary">⬇️ Descargar backup ahora</a>
 </div>
 
 <!-- Restore backup -->
-<div class="card" style="border-color:#f0b8b8;margin-bottom:16px">
+<div class="card" class="mb-a04460">
   <h2>⬆️ Restaurar backup</h2>
-  <div class="alert warning" style="margin:10px 0 14px">
+  <div class="alert warning" class="st-dfb735">
     <strong>Atención:</strong> Restaurar un backup reemplaza TODOS los datos actuales. Descargá primero un backup de seguridad.
   </div>
 
   <!-- Paso 1: Elegir empresa destino (solo admin) -->
   {% if current_user.is_admin %}
-  <div class="alert info" style="margin-bottom:12px">
+  <div class="alert info" class="mb-12">
     <strong>Modo admin:</strong> El backup se restaurará en tu empresa (Administración).
   </div>
   {% endif %}
 
   <form method="post" action="/backup/restaurar" enctype="multipart/form-data" id="restore-form">
-    <div class="form-group" style="margin-bottom:14px">
+    <div class="form-group" class="mb-14">
       <label>Seleccioná el archivo de backup (.db)</label>
-      <input type="file" name="archivo" accept=".db" required style="padding:8px;border:1px solid var(--border);border-radius:6px;width:100%">
+      <input type="file" name="archivo" accept=".db" required class="pad-8ebcc1">
     </div>
-    <div style="display:flex;gap:10px;align-items:center">
+    <div class="flex-center-gap-10">
       <button type="submit" class="btn btn-danger" onclick="return confirmarRestaurar()">
         ⬆️ Restaurar backup
       </button>
-      <span id="restore-status" style="font-size:12px;color:var(--text-3)"></span>
+      <span id="restore-status" class="tc-4ada39"></span>
     </div>
   </form>
 
   <!-- Restore from JSON -->
-  <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
-    <h3 style="font-size:13px;font-weight:700;color:var(--text-2);margin-bottom:10px">📄 Restaurar desde JSON</h3>
-    <p style="font-size:12px;color:var(--text-3);margin-bottom:10px">Si tenés un backup en formato JSON, restauralo desde acá.</p>
+  <div class="mt-ad8b0e">
+    <h3 class="mb-6a6a77">📄 Restaurar desde JSON</h3>
+    <p class="mb-3f5c3e">Si tenés un backup en formato JSON, restauralo desde acá.</p>
     <form method="post" action="/backup/restaurar_json" enctype="multipart/form-data">
-      <div class="form-group" style="margin-bottom:10px">
-        <input type="file" name="archivo" accept=".json" required style="padding:8px;border:1px solid var(--border);border-radius:6px;width:100%">
+      <div class="form-group" class="mb-10">
+        <input type="file" name="archivo" accept=".json" required class="pad-8ebcc1">
       </div>
       <button type="submit" class="btn btn-warning btn-sm" onclick="return confirmarRestaurar()">
         📄 Restaurar desde JSON
@@ -67,23 +67,23 @@
   </div>
 
   {% if success %}
-  <div class="alert success" style="margin-top:12px">{{ success }}</div>
+  <div class="alert success" class="mt-12">{{ success }}</div>
   {% endif %}
 </div>
 
 <!-- Importar Excel -->
-<div class="card" style="margin-bottom:16px">
+<div class="card" class="mb-16">
   <h2>📊 Importar datos desde Excel</h2>
-  <p style="font-size:13px;color:var(--text-2);margin:8px 0 14px;line-height:1.6">
+  <p class="tc-0422ba">
     Si tenés un Excel de respaldo con proveedores/facturas, importalo desde acá.
   </p>
   <a href="/importar" class="btn btn-outline">📊 Ir a Importar</a>
 </div>
 
 <!-- Info -->
-<div class="card" style="background:#f8f9fa">
-  <h3 style="margin-bottom:8px">Recomendaciones de backup</h3>
-  <ul style="font-size:12px;color:var(--text-2);line-height:2;padding-left:18px">
+<div class="card" class="bg-gray">
+  <h3 class="mb-8">Recomendaciones de backup</h3>
+  <ul class="tc-e88653">
     <li>Descargá un backup al menos una vez por semana</li>
     <li>Guardá los backups en Google Drive o otra PC</li>
     <li>Antes de cualquier actualización, descargá un backup</li>

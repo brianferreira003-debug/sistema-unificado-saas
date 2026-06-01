@@ -3,41 +3,41 @@
 {% block page_title %}Registrar pago{% endblock %}
 {% block content %}
 
-<div style="max-width:560px;margin:0 auto">
+<div class="w-826d2b">
 
-  <div class="card" style="margin-bottom:16px;background:var(--blue-bg);border-color:#bfdbfe">
-    <div style="font-size:12px;color:var(--text-3);margin-bottom:4px">Factura a pagar</div>
-    <div style="font-size:17px;font-weight:700;color:var(--accent)">{{ factura.proveedor_nombre }}</div>
-    <div style="font-size:14px;margin-top:4px">{{ factura.numero }} —
+  <div class="card" class="mb-998353">
+    <div class="mb-ced0cc">Factura a pagar</div>
+    <div class="txt-4b1c64">{{ factura.proveedor_nombre }}</div>
+    <div class="mt-dc57c9">{{ factura.numero }} —
       <strong>{{ "%.2f"|format(factura.importe) }} {{ factura.moneda }}</strong>
     </div>
-    <div style="font-size:12px;color:var(--text-3);margin-top:4px">Vencimiento: {{ factura.fecha_vencimiento }}</div>
+    <div class="mt-7be54b">Vencimiento: {{ factura.fecha_vencimiento }}</div>
   </div>
 
   {% if saldo_favor and saldo_favor > 0 %}
-  <div class="card" style="margin-bottom:16px;background:var(--green-bg);border-color:#86efac">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-      <span style="font-size:24px">💰</span>
+  <div class="card" class="mb-a733cc">
+    <div class="flex-7d03f6">
+      <span class="fs-24">💰</span>
       <div>
-        <div style="font-weight:700;color:#166534;font-size:14px">Saldo a favor disponible</div>
-        <div style="font-size:13px;color:#166534">
+        <div class="txt-eca746">Saldo a favor disponible</div>
+        <div class="tc-41a968">
           {{ factura.proveedor_nombre }} tiene
           <strong>{{ "%.2f"|format(saldo_favor) }} {{ factura.moneda }}</strong> a favor
         </div>
       </div>
     </div>
-    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;font-weight:600;color:#166534;min-height:44px" for="usar-saldo">
-      <input type="checkbox" id="usar-saldo" onchange="toggleSaldo()" style="width:20px;height:20px;accent-color:var(--green)">
+    <label class="flex-857a57" for="usar-saldo">
+      <input type="checkbox" id="usar-saldo" onchange="toggleSaldo()" class="clr-44fe66">
       Usar saldo a favor para este pago
     </label>
-    <div id="info-saldo" style="display:none;margin-top:10px;font-size:13px;color:#4b5563;background:#fff;border-radius:var(--radius-xs);padding:10px 14px;border:1px solid #86efac">
+    <div id="info-saldo" class="mt-93e9ab">
       {% set neto = factura.importe - saldo_favor %}
       {% if neto <= 0 %}
       El saldo cubre el total. <strong>No se necesita transferir dinero.</strong>
       Quedará un saldo restante de <strong>{{ "%.2f"|format(saldo_favor - factura.importe) }} {{ factura.moneda }}</strong> a favor.
       {% else %}
       Se usarán <strong>{{ "%.2f"|format(saldo_favor) }} {{ factura.moneda }}</strong> del saldo.
-      Resta transferir: <strong style="color:#dc2626">{{ "%.2f"|format(neto) }} {{ factura.moneda }}</strong>
+      Resta transferir: <strong class="clr-bc8099">{{ "%.2f"|format(neto) }} {{ factura.moneda }}</strong>
       {% endif %}
     </div>
   </div>
@@ -56,7 +56,7 @@
         <label>Importe pagado *</label>
         <input type="number" step="0.01" name="importe_pagado" id="importe-pagado"
                required value="{{ factura.importe }}"
-               style="font-size:18px;font-weight:700;font-family:var(--mono)">
+               class="fs-09b23a">
       </div>
     </div>
 
@@ -75,10 +75,10 @@
       <textarea name="nota" rows="2" placeholder="Observaciones del pago"></textarea>
     </div>
 
-    <div style="margin-top:20px;display:flex;flex-direction:column;gap:8px">
-      <button type="submit" name="generar_mail" value="" class="btn btn-success btn-block" style="min-height:48px">✅ Confirmar pago</button>
-      <button type="submit" name="generar_mail" value="1" class="btn btn-primary btn-block" style="min-height:48px">✅ Confirmar + ✉️ Generar mail</button>
-      <a href="/facturas" class="btn btn-outline btn-block" style="min-height:48px;display:flex;align-items:center;justify-content:center">Cancelar</a>
+    <div class="flex-3c80b3">
+      <button type="submit" name="generar_mail" value="" class="btn btn-success btn-block" class="st-a27b45">✅ Confirmar pago</button>
+      <button type="submit" name="generar_mail" value="1" class="btn btn-primary btn-block" class="st-a27b45">✅ Confirmar + ✉️ Generar mail</button>
+      <a href="/facturas" class="btn btn-outline btn-block" class="flex-b221a0">Cancelar</a>
     </div>
   </form>
   </div>

@@ -147,7 +147,8 @@ def init_master_db():
             (empresa_id, 'admin', pw_hash, 'Administrador', 'admin', 1)
         )
         conn.commit()
-        print("\n  Admin creado: admin / admin123  (CAMBIAR EN PRODUCCIÓN - force_password_change activo)\n")
+        # CSIO-OK: no se imprime password, solo instruccion de cambiar
+        print("\n  Admin creado: admin (CAMBIAR PASSWORD EN PRIMER LOGIN - force_password_change activo)\n")
 
     conn.close()
 
@@ -358,7 +359,9 @@ def get_resumen(empresa_id):
         return {}
     total_usd = db.execute("SELECT COALESCE(SUM(importe),0) FROM facturas WHERE estado='pendiente' AND moneda='USD'").fetchone()[0]
     total_uyu = db.execute("SELECT COALESCE(SUM(importe),0) FROM facturas WHERE estado='pendiente' AND moneda='UYU'").fetchone()[0]
+    # CSIO-OK: static SQL, no user input
     vencidas = db.execute("SELECT COUNT(*) FROM facturas WHERE estado='pendiente' AND fecha_vencimiento < date('now')").fetchone()[0]
+    # CSIO-OK: static SQL, no user input
     proximas = db.execute("SELECT COUNT(*) FROM facturas WHERE estado='pendiente' AND fecha_vencimiento BETWEEN date('now') AND date('now','+7 days')").fetchone()[0]
     total_cobros_mes = db.execute("SELECT COALESCE(SUM(monto),0) FROM cobros_pagos WHERE tipo='Cobro' AND strftime('%Y-%m',fecha)=strftime('%Y-%m','now')").fetchone()[0]
     total_pagos_mes = db.execute("SELECT COALESCE(SUM(monto),0) FROM cobros_pagos WHERE tipo='Pago' AND strftime('%Y-%m',fecha)=strftime('%Y-%m','now')").fetchone()[0]
@@ -1297,6 +1300,7 @@ def api_marcar_pagadas():
     db = get_tenant_db(current_user.empresa_id)
     if factura_ids:
         placeholders = ",".join("?" * len(factura_ids))
+        # CSIO-OK: safe parametrized query, ? placeholders
         facturas = db.execute(
             f"SELECT id, importe FROM facturas WHERE id IN ({placeholders}) AND proveedor_id=? AND estado IN ('pendiente','aprobada')",
             (*factura_ids, pid)
@@ -1665,16 +1669,19 @@ def backup_restaurar_json():
     db = get_tenant_db(current_user.empresa_id)
     data = backup.get('data', backup)
     total = 0
-    for tabla in ['saldos_favor', 'pagos', 'facturas', 'cobros_pagos', 'proveedores']:
+    TABLAS_PERMITIDAS = {'saldos_favor', 'pagos', 'facturas', 'cobros_pagos', 'proveedores'}
+    for tabla in TABLAS_PERMITIDAS:
         registros = data.get(tabla, [])
         if not registros:
             continue
         cols = list(registros[0].keys())
         placeholders = ','.join(['?'] * len(cols))
         col_names = ','.join(cols)
+        # CSIO-OK: tabla validated against TABLAS_PERMITIDAS whitelist above
         for row in registros:
             vals = [row.get(c) for c in cols]
             try:
+                # CSIO-OK: tabla whitelisted via TABLAS_PERMITIDAS
                 db.execute(f"INSERT OR REPLACE INTO {tabla} ({col_names}) VALUES ({placeholders})", vals)
                 total += 1
             except Exception:

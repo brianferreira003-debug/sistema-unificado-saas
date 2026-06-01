@@ -32,13 +32,13 @@
   </div>
 
   <!-- VINCULAR FACTURAS (solo Pago) -->
-  <div id="panel-sync" style="display:none;margin-bottom:16px;border:1.5px solid var(--amber);border-radius:var(--radius);padding:16px;background:var(--amber-bg)">
-    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;min-height:44px" for="chk-sync">
-      <input type="checkbox" id="chk-sync" onchange="toggleSync()" style="width:20px;height:20px;accent-color:var(--amber)">
-      <span style="font-size:14px;font-weight:700;color:#92400e">📋 Vincular con facturas de proveedor</span>
+  <div id="panel-sync" class="mb-bb9f66">
+    <label class="flex-629512" for="chk-sync">
+      <input type="checkbox" id="chk-sync" onchange="toggleSync()" class="clr-f011f7">
+      <span class="txt-b68142">📋 Vincular con facturas de proveedor</span>
     </label>
-    <div id="sync-body" style="display:none;margin-top:12px">
-      <p class="form-hint" style="margin-bottom:12px">Elegí el proveedor y las facturas — el nombre y monto se completan solos.</p>
+    <div id="sync-body" class="mt-68acf7">
+      <p class="form-hint" class="mb-12">Elegí el proveedor y las facturas — el nombre y monto se completan solos.</p>
       <div class="form-row cols2">
         <div class="form-group">
           <label>Proveedor</label>
@@ -54,16 +54,16 @@
           </select>
         </div>
       </div>
-      <div id="sync-descuento-info" style="display:none;font-size:12px;color:#92400e;background:#fef3c7;border-radius:var(--radius-xs);padding:8px 12px;margin-bottom:10px"></div>
-      <div id="sync-loading" style="display:none;font-size:13px;color:var(--text-3);padding:8px 0">Cargando facturas...</div>
-      <div id="sync-empty" style="display:none;font-size:13px;color:var(--text-3);padding:8px 0">✓ Este proveedor no tiene facturas pendientes.</div>
-      <div id="sync-facturas-wrap" style="display:none">
-        <div style="font-size:12px;font-weight:600;color:#78350f;margin-bottom:8px" id="sync-facturas-titulo"></div>
-        <div id="sync-facturas-lista" style="max-height:240px;overflow-y:auto;border:1px solid #fcd34d;border-radius:var(--radius-xs);background:#fff"></div>
-        <div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <div id="sync-descuento-info" class="mb-752b4e"></div>
+      <div id="sync-loading" class="tc-a77b67">Cargando facturas...</div>
+      <div id="sync-empty" class="tc-a77b67">✓ Este proveedor no tiene facturas pendientes.</div>
+      <div id="sync-facturas-wrap" class="d-none">
+        <div class="mb-e81901" id="sync-facturas-titulo"></div>
+        <div id="sync-facturas-lista" class="br-131c71"></div>
+        <div class="flex-f384ae">
           <button type="button" onclick="seleccionarTodas()" class="btn btn-outline btn-sm">Todas</button>
           <button type="button" onclick="seleccionarNinguna()" class="btn btn-outline btn-sm">Ninguna</button>
-          <span id="sync-seleccion-info" style="font-size:12px;color:#78350f;font-weight:600"></span>
+          <span id="sync-seleccion-info" class="txt-93cf7c"></span>
         </div>
       </div>
     </div>
@@ -77,13 +77,13 @@
 
   <!-- Monto + Moneda: 70% / 30% -->
   <div class="form-row cols2">
-    <div class="form-group" style="flex:7">
+    <div class="form-group" class="fx-2066c2">
       <label>Monto</label>
-      <input type="number" step="0.01" id="f-monto" placeholder="0.00" style="font-size:18px;font-weight:700;font-family:var(--mono)">
+      <input type="number" step="0.01" id="f-monto" placeholder="0.00" class="fs-09b23a">
     </div>
-    <div class="form-group" style="flex:3">
+    <div class="form-group" class="fx-56fa40">
       <label>Moneda</label>
-      <select id="f-moneda" style="text-align:center;font-weight:700">
+      <select id="f-moneda" class="ta-96f6ea">
         <option value="USD">USD</option>
         <option value="UYU">UYU</option>
       </select>
@@ -119,64 +119,64 @@
     <label>Comprobante</label>
     <div id="drop-zone"
          onclick="document.getElementById('file-input').click()"
-         style="border:1.5px dashed var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;cursor:pointer;transition:all .15s;background:var(--surface-2);display:flex;align-items:center;justify-content:center;gap:8px;min-height:60px">
-      <span style="font-size:18px">📎</span>
-      <span style="font-size:13px;font-weight:600;color:var(--text-2)">Subir comprobante</span>
-      <span style="font-size:11px;color:var(--text-3)">PDF, JPG, PNG</span>
-      <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png,.webp" style="display:none" onchange="archivoSeleccionado(this.files[0])">
+         class="flex-d6f40b">
+      <span class="fs-18">📎</span>
+      <span class="txt-53b7c5">Subir comprobante</span>
+      <span class="tc-1c3d11">PDF, JPG, PNG</span>
+      <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png,.webp" class="d-none" onchange="archivoSeleccionado(this.files[0])">
     </div>
-    <div id="upload-status" style="display:none;margin-top:8px;padding:10px 14px;border-radius:var(--radius-xs);font-size:13px;font-weight:600;"></div>
-    <div id="archivo-preview" style="display:none;margin-top:8px;padding:10px 14px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--surface);align-items:center;gap:10px;font-size:13px">
-      <span id="archivo-icono" style="font-size:20px"></span>
-      <div style="flex:1;min-width:0">
-        <div id="archivo-nombre" style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
-        <div id="archivo-size" style="color:var(--text-3);font-size:11px"></div>
+    <div id="upload-status" class="mt-901049"></div>
+    <div id="archivo-preview" class="mt-067a3b">
+      <span id="archivo-icono" class="fs-20"></span>
+      <div class="w-89bd09">
+        <div id="archivo-nombre" class="ws-7dc16d"></div>
+        <div id="archivo-size" class="tc-4053ac"></div>
       </div>
-      <button id="btn-subir" onclick="subirADrive()" class="btn btn-sm" style="background:var(--blue);color:#fff;min-height:36px">☁️ Subir</button>
-      <button onclick="limpiarArchivo()" class="btn btn-sm btn-outline" style="min-height:36px">✕</button>
+      <button id="btn-subir" onclick="subirADrive()" class="btn btn-sm" class="clr-01d797">☁️ Subir</button>
+      <button onclick="limpiarArchivo()" class="btn btn-sm btn-outline" class="st-181b43">✕</button>
     </div>
-    <div style="margin-top:8px;display:flex;gap:8px">
-      <input type="url" id="f-link" placeholder="O pegá un link de Drive..." style="flex:1" oninput="onLinkInput()">
-      <button id="btn-abrir-link" onclick="abrirLink()" class="btn btn-outline btn-sm" style="display:none;min-height:48px">🔗</button>
+    <div class="flex-f9de58">
+      <input type="url" id="f-link" placeholder="O pegá un link de Drive..." class="fx-da5cd6" oninput="onLinkInput()">
+      <button id="btn-abrir-link" onclick="abrirLink()" class="btn btn-outline btn-sm" class="st-2e192d">🔗</button>
     </div>
-    <div id="drive-tip" class="form-hint" style="margin-top:4px"></div>
-    <div id="drive-no-config" style="display:none;margin-top:8px;padding:10px 14px;border-radius:var(--radius-xs);background:var(--amber-bg);border:1px solid #fcd34d;font-size:13px;color:#92400e">
-      ⚠️ Drive no está configurado. Podés pegar el link manualmente o <a href="/configuracion" style="color:#92400e;font-weight:700">ir a Configuración</a>.
+    <div id="drive-tip" class="form-hint" class="mt-4"></div>
+    <div id="drive-no-config" class="mt-f0b69b">
+      ⚠️ Drive no está configurado. Podés pegar el link manualmente o <a href="/configuracion" class="clr-a24182">ir a Configuración</a>.
     </div>
   </div>
 
   <!-- ═══ NOMBRE SUGERIDO DRIVE (colapsable) ═══ -->
-  <div style="margin-top:16px;border:1px dashed var(--border);border-radius:var(--radius-sm);overflow:hidden">
-    <button class="accordion-header" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')" style="padding:12px 14px;font-size:13px">
+  <div class="mt-87e3d3">
+    <button class="accordion-header" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')" class="fs-c38923">
       📁 Nombre sugerido para Drive
       <span class="arrow">▼</span>
     </button>
-    <div class="accordion-body" style="padding:0 14px 12px">
-      <div class="form-hint" style="margin-bottom:4px">Carpeta: <code id="drive-path" style="font-family:var(--mono);font-size:12px;color:var(--text-2)"></code></div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <code id="drive-nombre" style="font-family:var(--mono);font-size:12px;color:var(--text);background:var(--surface-2);padding:4px 8px;border-radius:4px;flex:1;word-break:break-all"></code>
-        <button id="btn-copiar-nombre" onclick="copiarNombreSugerido()" class="btn btn-outline btn-xs" style="min-height:30px">📋 Copiar</button>
+    <div class="accordion-body" class="pad-f11935">
+      <div class="form-hint" class="mb-4">Carpeta: <code id="drive-path" class="tc-808ec0"></code></div>
+      <div class="flex-747a39">
+        <code id="drive-nombre" class="bg-28d9aa"></code>
+        <button id="btn-copiar-nombre" onclick="copiarNombreSugerido()" class="btn btn-outline btn-xs" class="st-55336d">📋 Copiar</button>
       </div>
     </div>
   </div>
 
   <!-- ═══ BOTÓN REGISTRAR ═══ -->
-  <button onclick="registrar()" id="btn-registrar" class="btn btn-success btn-block" style="margin-top:20px;height:52px;font-size:16px;font-weight:700">
+  <button onclick="registrar()" id="btn-registrar" class="btn btn-success btn-block" class="mt-f7ed63">
     Registrar
   </button>
-  <div id="toast" style="display:none;margin-top:12px;padding:12px 16px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;text-align:center"></div>
+  <div id="toast" class="mt-867014"></div>
 </div>
 
 <!-- ═══ ÚLTIMOS REGISTROS (acordeón) ═══ -->
-<div style="margin-top:16px">
-  <button class="accordion-header" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:space-between">
+<div class="mt-16">
+  <button class="accordion-header" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')" class="flex-ff2d7a">
     📋 Últimos 10 registros
     <span class="arrow">▼</span>
   </button>
-  <div class="accordion-body" style="margin-top:8px">
-    <div id="ultimos-lista"><div style="color:var(--text-3);font-size:13px;text-align:center;padding:16px">Cargando...</div></div>
-    <div style="margin-top:12px">
-      <a href="/cobros-pagos/historial" class="btn btn-outline btn-sm btn-block" style="text-align:center">Ver historial completo →</a>
+  <div class="accordion-body" class="mt-8">
+    <div id="ultimos-lista"><div class="tc-5faa74">Cargando...</div></div>
+    <div class="mt-12">
+      <a href="/cobros-pagos/historial" class="btn btn-outline btn-sm btn-block" class="text-center">Ver historial completo →</a>
     </div>
   </div>
 </div>
@@ -268,11 +268,11 @@ function renderFacturas(facturas) {
     const imp = parseFloat(f.importe);
     const descuento = descuentoProveedor > 0 ? imp * descuentoProveedor / 100 : 0;
     const final = imp - descuento;
-    const descTxt = descuento > 0 ? '<span style="color:#16a34a;font-size:10px"> (-' + f.moneda + ' ' + descuento.toFixed(2) + ')</span>' : '';
-    return '<label style="display:flex;align-items:center;gap:10px;padding:12px;cursor:pointer;border-bottom:1px solid #fef3c7;font-size:13px;min-height:48px">' +
-      '<input type="checkbox" value="' + f.id + '" onchange="actualizarSeleccionInfo()" style="width:18px;height:18px;flex-shrink:0">' +
-      '<div style="flex:1"><span style="font-weight:600">#' + f.numero + '</span><span style="color:#94a3b8"> · vence ' + f.fecha_vencimiento + '</span></div>' +
-      '<div style="font-weight:700;color:#1e293b;font-family:var(--mono)">' + f.moneda + ' ' + final.toFixed(2) + descTxt + '</div>' +
+    const descTxt = descuento > 0 ? '<span class="tc-d94467"> (-' + f.moneda + ' ' + descuento.toFixed(2) + ')</span>' : '';
+    return '<label class="flex-967bfb">' +
+      '<input type="checkbox" value="' + f.id + '" onchange="actualizarSeleccionInfo()" class="w-de99ef">' +
+      '<div class="fx-da5cd6"><span class="fw-600">#' + f.numero + '</span><span class="clr-8cd4ae"> · vence ' + f.fecha_vencimiento + '</span></div>' +
+      '<div class="clr-0d7ef5">' + f.moneda + ' ' + final.toFixed(2) + descTxt + '</div>' +
       '</label>';
   }).join('');
 }
@@ -444,18 +444,18 @@ async function cargarUltimos() {
     const data = await r.json();
     const lista = document.getElementById('ultimos-lista');
     const ultimos = data.slice(0, 10);
-    if (!ultimos.length) { lista.innerHTML = '<div style="color:var(--text-3);font-size:13px;text-align:center;padding:16px">Sin registros aún</div>'; return; }
+    if (!ultimos.length) { lista.innerHTML = '<div class="tc-5faa74">Sin registros aún</div>'; return; }
     lista.innerHTML = ultimos.map(r =>
-      '<div style="display:flex;align-items:center;gap:10px;padding:12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);margin-bottom:8px">' +
-      '<span class="badge ' + (r.tipo==='Cobro'?'badge-green':'badge-orange') + '" style="flex-shrink:0">' + r.tipo + '</span>' +
-      '<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + r.cliente + '</div>' +
-      '<div style="font-size:11px;color:var(--text-3)">' + r.fecha + ' · ' + (r.banco||r.medio) + '</div></div>' +
-      '<div style="text-align:right;flex-shrink:0"><div style="font-family:var(--mono);font-size:13px;font-weight:700;color:' + (r.tipo==='Cobro'?'#16a34a':'#dc2626') + '">' + r.moneda + ' ' + parseFloat(r.monto).toFixed(2) + '</div>' +
-      '<div style="font-size:10px;color:' + (r.estado==='Procesado'?'#16a34a':'#d97706') + '">' + r.estado + '</div></div>' +
-      (r.comprobante ? '<a href="' + r.comprobante + '" target="_blank" style="font-size:16px;text-decoration:none;flex-shrink:0">🔗</a>' : '') +
+      '<div class="flex-e654ad">' +
+      '<span class="badge ' + (r.tipo==='Cobro'?'badge-green':'badge-orange') + '" class="shrink-0">' + r.tipo + '</span>' +
+      '<div class="w-89bd09"><div class="fs-3cac39">' + r.cliente + '</div>' +
+      '<div class="tc-1c3d11">' + r.fecha + ' · ' + (r.banco||r.medio) + '</div></div>' +
+      '<div class="ta-1d3685"><div class="txt-1be37f">' + r.moneda + ' ' + parseFloat(r.monto).toFixed(2) + '</div>' +
+      '<div class="tc-883fd3">' + r.estado + '</div></div>' +
+      (r.comprobante ? '<a href="' + r.comprobante + '" target="_blank" class="fs-38c69b">🔗</a>' : '') +
       '</div>'
     ).join('');
-  } catch(e) { document.getElementById('ultimos-lista').innerHTML = '<div style="color:var(--text-3);font-size:13px;text-align:center;padding:16px">Error cargando datos</div>'; }
+  } catch(e) { document.getElementById('ultimos-lista').innerHTML = '<div class="tc-5faa74">Error cargando datos</div>'; }
 }
 
 function actualizarDriveTip() {

@@ -1,72 +1,72 @@
 {% extends "base.html" %}
 {% block title %}Mail al proveedor — {{ factura.proveedor_nombre }}{% endblock %}
 {% block content %}
-<div style="max-width:720px">
+<div class="w-2bd9fd">
 <div class="top-actions">
   <h1>✉️ Mail — {{ factura.proveedor_nombre }}</h1>
   <a href="/pagos" class="btn btn-outline">← Volver a pagos</a>
 </div>
 
 {% if not carpeta_ok %}
-<div class="alert-box warning" style="margin-bottom:16px">
+<div class="alert-box warning" class="mb-16">
   ⚠️ No configuraste la carpeta de comprobantes.
-  <a href="/configuracion" style="color:#7a5c00;font-weight:700">Configurarla ahora →</a>
+  <a href="/configuracion" class="clr-c85c10">Configurarla ahora →</a>
 </div>
 {% endif %}
 
-<div class="card" style="margin-bottom:16px">
-  <div style="font-weight:700;margin-bottom:10px">📎 Comprobante a adjuntar</div>
+<div class="card" class="mb-16">
+  <div class="mb-f18f30">📎 Comprobante a adjuntar</div>
   {% if archivos_encontrados %}
-  <div style="background:#dcfce7;border:1px solid #86efac;border-radius:6px;padding:10px 14px;margin-bottom:10px">
-    <div style="font-size:13px;font-weight:700;color:#166534;margin-bottom:8px">✅ {{ archivos_encontrados|length }} archivo(s) encontrado(s) automáticamente:</div>
+  <div class="mb-021f3e">
+    <div class="mb-935eab">✅ {{ archivos_encontrados|length }} archivo(s) encontrado(s) automáticamente:</div>
     {% for ruta, nombre in archivos_encontrados %}
-    <label style="display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer;font-size:13px">
+    <label class="flex-7c03f5">
       <input type="radio" name="archivo_sel" value="{{ ruta }}" {% if loop.first %}checked{% endif %} onchange="document.getElementById('archivo_path_hidden').value=this.value">
       <span>📄 <strong>{{ nombre }}</strong></span>
-      <span style="color:#888;font-size:11px;word-break:break-all">{{ ruta }}</span>
+      <span class="tc-9fe9b6">{{ ruta }}</span>
     </label>
     {% endfor %}
-    <label style="display:flex;align-items:center;gap:8px;margin-top:8px;cursor:pointer;font-size:13px">
+    <label class="flex-d59cb8">
       <input type="radio" name="archivo_sel" value="" onchange="document.getElementById('archivo_path_hidden').value=''">
-      <span style="color:#666">Sin adjunto</span>
+      <span class="clr-909cf2">Sin adjunto</span>
     </label>
   </div>
   {% else %}
   {% if carpeta_ok %}
-  <div class="alert-box warning" style="margin-bottom:10px">
+  <div class="alert-box warning" class="mb-10">
     No se encontró ningún archivo que coincida con
-    <code style="font-size:12px;background:#fff3cd;padding:1px 5px;border-radius:3px">PAGO_{{ factura.proveedor_nombre|upper|replace(' ','_') }}_*{{ pago.fecha_pago|replace('-','_') }}*</code>
+    <code class="bg-cb3820">PAGO_{{ factura.proveedor_nombre|upper|replace(' ','_') }}_*{{ pago.fecha_pago|replace('-','_') }}*</code>
   </div>
   {% endif %}
-  <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:4px">Ruta del archivo (pegá la ruta completa):</label>
-  <input id="ruta_manual" type="text" placeholder="Ej: C:\Comprobantes\2026\04\PAGO_SISPRO_22_04_2026.pdf" style="font-size:12px"
+  <label class="mb-548706">Ruta del archivo (pegá la ruta completa):</label>
+  <input id="ruta_manual" type="text" placeholder="Ej: C:\Comprobantes\2026\04\PAGO_SISPRO_22_04_2026.pdf" class="fs-12"
          oninput="document.getElementById('archivo_path_hidden').value=this.value">
   {% endif %}
 </div>
 
-<div class="card" style="margin-bottom:16px">
-  <div style="font-weight:700;margin-bottom:10px">🎨 Tono del mail</div>
-  <div style="display:flex;gap:8px">
+<div class="card" class="mb-16">
+  <div class="mb-f18f30">🎨 Tono del mail</div>
+  <div class="flex-gap-8">
     <button type="button" class="btn btn-outline btn-sm tono-btn" id="btn-formal" onclick="setTono('formal')">Formal</button>
     <button type="button" class="btn btn-outline btn-sm tono-btn" id="btn-breve" onclick="setTono('breve')">Breve y directo</button>
     <button type="button" class="btn btn-outline btn-sm tono-btn" id="btn-cordial" onclick="setTono('cordial')">Cordial</button>
   </div>
 </div>
 
-<div class="card" style="font-family:Arial,sans-serif;font-size:14px;line-height:1.8;margin-bottom:16px">
-  <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #eee">
-    <div><span style="color:#888;font-size:12px;font-weight:700">PARA:</span>
-      {% if factura.proveedor_email %}<span style="color:#1F4E79">{{ factura.proveedor_email }}</span>
-      {% else %}<span style="color:#999;font-style:italic">[ email del proveedor — <a href="/proveedores/{{ factura.proveedor_id }}/editar">agregarlo en Proveedores</a> ]</span>{% endif %}
+<div class="card" class="mb-65ec78">
+  <div class="mb-1634ad">
+    <div><span class="txt-fe3e8f">PARA:</span>
+      {% if factura.proveedor_email %}<span class="text-email">{{ factura.proveedor_email }}</span>
+      {% else %}<span class="text-placeholder">[ email del proveedor — <a href="/proveedores/{{ factura.proveedor_id }}/editar">agregarlo en Proveedores</a> ]</span>{% endif %}
     </div>
-    <div style="margin-top:4px"><span style="color:#888;font-size:12px;font-weight:700">ASUNTO:</span> <span id="campo-asunto"></span></div>
+    <div class="mt-4"><span class="txt-fe3e8f">ASUNTO:</span> <span id="campo-asunto"></span></div>
   </div>
-  <div id="cuerpo-mail" style="white-space:pre-line;color:#222"></div>
+  <div id="cuerpo-mail" class="clr-88c88c"></div>
 </div>
 
-<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+<div class="flex-bb0b2a">
   <button class="btn btn-outline" onclick="copiarMail()">📋 Copiar texto</button>
-  <form method="post" action="/pagos/{{ pago.id }}/descargar_eml" style="display:inline">
+  <form method="post" action="/pagos/{{ pago.id }}/descargar_eml" class="d-inline">
     <input type="hidden" id="archivo_path_hidden" name="archivo_path" value="{% if archivos_encontrados %}{{ archivos_encontrados[0][0] }}{% endif %}">
     <input type="hidden" name="tono" id="tono_hidden" value="formal">
     <button type="submit" class="btn btn-primary">⬇️ Descargar .eml (con adjunto)</button>
@@ -76,9 +76,9 @@
   {% endif %}
 </div>
 
-<div id="toast-mail" style="display:none;padding:10px 14px;background:#dcfce7;border:1px solid #86efac;border-radius:6px;color:#166534;font-size:13px;font-weight:600;margin-bottom:12px">✅ Texto copiado al portapapeles</div>
+<div id="toast-mail" class="mb-ee9135">✅ Texto copiado al portapapeles</div>
 
-<div class="card" style="background:#f8f9fa;font-size:12px;color:#666;line-height:1.8">
+<div class="card" class="tc-cf065f">
   <strong>Cómo usar el .eml:</strong> Descargá el archivo → doble clic → se abre en Outlook con el asunto, el cuerpo y el comprobante <strong>ya adjunto</strong>. Solo revisás y le das Enviar.
 </div>
 </div>

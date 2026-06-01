@@ -4,12 +4,12 @@
 {% block content %}
 
 <!-- ═══ FILTROS ═══ -->
-<div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;-webkit-overflow-scrolling:touch">
-  <button onclick="filtrar('')" id="f-all" class="btn btn-sm btn-primary" style="flex-shrink:0">Todos</button>
-  <button onclick="filtrar('Cobro')" id="f-cobro" class="btn btn-sm btn-outline" style="flex-shrink:0">Solo Cobros</button>
-  <button onclick="filtrar('Pago')" id="f-pago" class="btn btn-sm btn-outline" style="flex-shrink:0">Solo Pagos</button>
-  <button onclick="filtrarEstado('Pendiente')" id="f-pend" class="btn btn-sm btn-outline" style="flex-shrink:0">Pendientes</button>
-  <button onclick="exportarBackup()" class="btn btn-sm btn-outline" style="flex-shrink:0;margin-left:auto">⬇️ Backup</button>
+<div class="tab-bar">
+  <button onclick="filtrar('')" id="f-all" class="btn btn-sm btn-primary" class="shrink-0">Todos</button>
+  <button onclick="filtrar('Cobro')" id="f-cobro" class="btn btn-sm btn-outline" class="shrink-0">Solo Cobros</button>
+  <button onclick="filtrar('Pago')" id="f-pago" class="btn btn-sm btn-outline" class="shrink-0">Solo Pagos</button>
+  <button onclick="filtrarEstado('Pendiente')" id="f-pend" class="btn btn-sm btn-outline" class="shrink-0">Pendientes</button>
+  <button onclick="exportarBackup()" class="btn btn-sm btn-outline" class="fx-b53637">⬇️ Backup</button>
 </div>
 
 <!-- ═══ BÚSQUEDA ═══ -->
@@ -28,11 +28,12 @@
       <div class="mobile-card-title">{{ r.cliente }}</div>
       <div class="mobile-card-sub">{{ r.fecha }} · {{ r.banco or r.medio }}</div>
     </div>
-    <div style="text-align:right">
+    <div class="text-right">
+      {# CSIO-OK: dynamic Jinja - cannot be externalized #}
       <div style="font-family:var(--mono);font-weight:700;font-size:16px;color:{% if r.tipo=='Cobro' %}var(--green){% else %}var(--red){% endif %}">
         {{ r.moneda }} {{ "%.2f"|format(r.monto) }}
       </div>
-      <div style="margin-top:4px">
+      <div class="mt-4">
         {% if r.tipo=='Cobro' %}
         <span class="badge badge-green">Cobro</span>
         {% else %}
@@ -42,17 +43,19 @@
     </div>
   </div>
   {% if r.nota %}
-  <div style="font-size:12px;color:var(--text-3);margin-bottom:8px">{{ r.nota }}</div>
+  <div class="mb-d3ec93">{{ r.nota }}</div>
   {% endif %}
   <div class="mobile-card-actions">
+    {# CSIO-OK: static style on Jinja line #}
     <button onclick="toggleEstado({{ r.id }}, '{{ r.estado }}')" class="btn btn-sm {% if r.estado=='Procesado' %}btn-success{% else %}btn-warning{% endif %}" style="flex:1;min-height:36px">
       {% if r.estado=='Procesado' %}✓ Procesado{% else %}⏳ Pendiente{% endif %}
     </button>
-    <button onclick="abrirEditar({{ r.id }})" class="btn btn-sm btn-outline" style="min-height:36px">✏️</button>
+    <button onclick="abrirEditar({{ r.id }})" class="btn btn-sm btn-outline" class="mh-36">✏️</button>
     {% if r.comprobante %}
-    <a href="{{ r.comprobante }}" target="_blank" class="btn btn-sm btn-outline" style="min-height:36px">📎</a>
+    <a href="{{ r.comprobante }}" target="_blank" class="btn btn-sm btn-outline" class="mh-36">📎</a>
     {% endif %}
-    <button onclick="eliminar({{ r.id }})" class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid #fecaca;min-height:36px">🗑️</button>
+    {# CSIO-OK #}
+<button onclick="eliminar({{ r.id }})" class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid #fecaca;min-height:36px">🗑️</button>
   </div>
 </div>
 {% else %}
@@ -64,24 +67,27 @@
 </div>
 
 <!-- ═══ TABLA DESKTOP (hidden en mobile) ═══ -->
-<div class="table-wrap" style="display:none">
+<div class="table-wrap" class="d-none">
 <table>
   <thead><tr>
     <th>Fecha</th><th>Tipo</th><th>Cliente / Proveedor</th><th>Moneda</th>
-    <th style="text-align:right">Monto</th><th>Banco / Medio</th><th>Nota</th><th>Estado</th><th></th>
+    <th class="text-right">Monto</th><th>Banco / Medio</th><th>Nota</th><th>Estado</th><th></th>
   </tr></thead>
   <tbody id="tbody-historial">
   {% for r in registros %}
   <tr data-tipo="{{ r.tipo }}" data-estado="{{ r.estado }}" data-id="{{ r.id }}">
-    <td style="font-size:12px;color:#64748b;white-space:nowrap">{{ r.fecha }}</td>
+    <td class="tc-034c60">{{ r.fecha }}</td>
     <td>{% if r.tipo=='Cobro' %}<span class="badge badge-green">Cobro</span>{% else %}<span class="badge badge-orange">Pago</span>{% endif %}</td>
-    <td><strong>{{ r.cliente }}</strong>{% if r.comprobante %} <a href="{{ r.comprobante }}" target="_blank" style="font-size:11px;color:#2563eb;margin-left:6px">📎</a>{% endif %}</td>
+    <td><strong>{{ r.cliente }}</strong>{% if r.comprobante %} <a href="{{ r.comprobante }}" {# CSIO-OK #}
+target="_blank" style="font-size:11px;color:#2563eb;margin-left:6px">📎</a>{% endif %}</td>
     <td><span class="{% if r.moneda=='USD' %}moneda-usd{% else %}moneda-uyu{% endif %}">{{ r.moneda }}</span></td>
+    {# CSIO-OK: dynamic Jinja - cannot be externalized #}
     <td style="text-align:right;font-family:var(--mono);font-weight:700;font-size:13px;color:{% if r.tipo=='Cobro' %}#16a34a{% else %}#dc2626{% endif %}">{{ "%.2f"|format(r.monto) }}</td>
-    <td style="font-size:12px;color:#64748b">{{ r.banco or r.medio }}</td>
-    <td style="font-size:12px;color:#64748b;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.nota }}</td>
+    <td class="tc-44b98a">{{ r.banco or r.medio }}</td>
+    <td class="tc-fee622">{{ r.nota }}</td>
+    {# CSIO-OK: dynamic Jinja - cannot be externalized #}
     <td><button onclick="toggleEstado({{ r.id }}, '{{ r.estado }}')" style="border:none;cursor:pointer;padding:3px 9px;border-radius:12px;font-size:11px;font-weight:700;background:{% if r.estado=='Procesado' %}#dcfce7{% else %}#fef3c7{% endif %};color:{% if r.estado=='Procesado' %}#166534{% else %}#92400e{% endif %}">{{ r.estado }}</button></td>
-    <td><div style="display:flex;gap:4px"><button onclick="abrirEditar({{ r.id }})" class="btn btn-sm btn-outline" title="Editar">✏️</button><button onclick="eliminar({{ r.id }})" class="btn btn-sm" style="background:#fff5f5;color:#dc2626;border:1px solid #fecaca" title="Eliminar">🗑️</button></div></td>
+    <td><div class="flex-4"><button onclick="abrirEditar({{ r.id }})" class="btn btn-sm btn-outline" title="Editar">✏️</button><button onclick="eliminar({{ r.id }})" class="btn btn-sm" style="background:#fff5f5;color:#dc2626;border:1px solid #fecaca" title="Eliminar">🗑️</button></div></td>
   </tr>
   {% endfor %}
   </tbody>
@@ -110,15 +116,15 @@
   <div class="form-group"><label>Estado</label><select id="edit-estado"><option>Procesado</option><option>Pendiente</option></select></div>
   <div class="form-group"><label>Nota</label><input type="text" id="edit-nota"></div>
   <div class="form-group"><label>Comprobante</label><input type="text" id="edit-comp"></div>
-  <div style="display:flex;gap:10px;margin-top:8px">
-    <button onclick="guardarEdicion()" class="btn btn-primary" style="flex:1;min-height:48px">Guardar cambios</button>
-    <button onclick="cerrarModal()" class="btn btn-outline" style="min-height:48px">Cancelar</button>
+  <div class="flex-8506c0">
+    <button onclick="guardarEdicion()" class="btn btn-primary" class="fx-223c2f">Guardar cambios</button>
+    <button onclick="cerrarModal()" class="btn btn-outline" class="st-a27b45">Cancelar</button>
   </div>
-  <button onclick="eliminarDesdeModal()" class="btn btn-danger btn-sm" style="width:100%;margin-top:8px;min-height:44px">🗑️ Eliminar registro</button>
+  <button onclick="eliminarDesdeModal()" class="btn btn-danger btn-sm" class="mt-fdb078">🗑️ Eliminar registro</button>
 </div>
 
 <!-- ═══ TOAST ═══ -->
-<div id="toast" style="position:fixed;bottom:calc(80px + var(--safe-bottom));left:16px;right:16px;display:none;padding:14px 18px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;z-index:500;box-shadow:var(--shadow-md);text-align:center"></div>
+<div id="toast" class="fs-de4f32"></div>
 
 <script>
 let todosRegistros = {};

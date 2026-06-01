@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/style.css">
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
 
 <header class="header">
   <button class="hamburger" onclick="toggleSidebar()" aria-label="Menú"><span></span><span></span><span></span></button>
@@ -22,7 +22,7 @@
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for category, message in messages %}
-      <div class="alert alert-{{ category }}" style="margin-bottom:14px">{{ message }}</div>
+      <div class="alert alert-{{ category }}" class="mb-14">{{ message }}</div>
       {% endfor %}
     {% endif %}
   {% endwith %}
@@ -110,13 +110,13 @@
   </div>
   <div class="sidebar-footer">
     {% if current_user.is_authenticated %}
-      <div style="margin-bottom:6px">
-        <span style="color:rgba(255,255,255,.6)">{{ current_user.username }}</span>
-        {% if current_user.is_admin %}
-        <span class="badge" style="background:rgba(126,201,154,.2);color:#7EC99A;font-size:9px;margin-left:4px;padding:2px 6px;border-radius:10px">ADMIN</span>
-        {% endif %}
-      </div>
-      <a href="/logout" style="color:rgba(255,255,255,.4);font-size:11px;text-decoration:none">→ Cerrar sesión</a>
+  <div class="sidebar-user-info">
+    <span class="sidebar-username">{{ current_user.username }}</span>
+    {% if current_user.is_admin %}
+    <span class="sidebar-admin-badge">ADMIN</span>
+    {% endif %}
+  </div>
+  <a href="/logout" class="sidebar-logout-link">→ Cerrar sesión</a>
     {% else %}
       v3.2 SaaS
     {% endif %}
@@ -126,8 +126,8 @@
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
 <div class="dropdown-backdrop" id="more-backdrop" onclick="toggleMoreMenu()"></div>
-<div class="dropdown-menu" id="more-menu" style="min-width:220px">
-  <div style="padding:10px 16px;font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.8px">Más opciones</div>
+<div class="dropdown-menu" id="more-menu" class="mw-220">
+  <div class="txt-3ecee4">Más opciones</div>
   <a href="/informe" class="dropdown-item">◧ Deuda pendiente</a>
   <a href="/cobros-pagos/informe" class="dropdown-item">◈ Cobros y pagos</a>
   <div class="dropdown-divider"></div>
@@ -139,7 +139,7 @@
   <a href="/proveedores" class="dropdown-item">🏢 Proveedores</a>
   {% if current_user.is_authenticated %}
   <div class="dropdown-divider"></div>
-  <a href="/logout" class="dropdown-item" style="color:var(--red)">→ Cerrar sesión</a>
+  <a href="/logout" class="dropdown-item" class="clr-e09362">→ Cerrar sesión</a>
   {% endif %}
 </div>
 
